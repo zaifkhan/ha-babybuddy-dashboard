@@ -7,7 +7,7 @@ A beautiful, interactive, and responsive custom dashboard for Home Assistant tha
 ## **✨ Features**
 
 * **Instant Sync:** 2-way background syncing. Start a timer on your phone, and the HA dashboard updates instantly.  
-* **Interactive Active Banners:** Pulsing banners show exactly what activity is running and for how long.  
+* **Interactive Active Banners:** Banners show exactly what activity is running and for how long.  
 * **Smart Edit Popups:** Tap an active banner to edit its start time, or tap the pencil icon to edit/delete past entries right from the dashboard.  
 * **Orphan Timer Catching:** Warns you if an unclaimed timer is running in Baby Buddy and lets you assign it to an activity with one tap.  
 * **Custom Sleep & Feed Tables:** Formatted historical logs right on the UI.
