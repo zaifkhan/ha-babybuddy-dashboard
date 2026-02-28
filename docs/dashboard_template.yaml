@@ -1,0 +1,909 @@
+type: vertical-stack
+cards:
+  - type: custom:button-card
+    show_name: false
+    show_icon: false
+    show_state: false
+    custom_fields:
+      header: |
+        [[[
+          let active = states['input_select.bb_active_activity']?.state ?? 'none';
+          let wake_label = active === 'Sleep' ? 'Last awake' : 'Awake';
+          let wake_val = states['sensor.bb_wake_window']?.state ?? '-';
+          if (['unknown','unavailable','none'].includes(wake_val)) wake_val = '-';
+
+          let fed_raw = states['sensor.bb_time_since_feed']?.state ?? '-';
+          let fed = ['unknown','unavailable','none'].includes(fed_raw) ? '-'
+                  : (fed_raw.includes('ago') ? fed_raw : fed_raw + ' ago');
+
+          let sl_raw = states['sensor.bb_last_sleep_info']?.state ?? '';
+          let sleep_dur = '-', sleep_end = '';
+          if (sl_raw && !['unknown','unavailable','none'].includes(sl_raw)) {
+            let sp = sl_raw.split('·');
+            sleep_dur = sp[0]?.trim() ?? '-';
+            sleep_end = sp[1]?.trim() ?? '';
+          }
+
+          let sleep_end_html = sleep_end
+            ? `<span style="font-size:12px;opacity:0.5;margin-top:3px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sleep_end}</span>`
+            : '';
+
+          const tile = (label, value, sub, bg, border, color) => `
+            <div style="
+              flex:1;
+              display:flex;
+              flex-direction:column;
+              justify-content:center;
+              padding:10px 12px;
+              border-radius:14px;
+              background:${bg};
+              border:1px solid ${border};
+              min-width:0;
+              box-sizing:border-box;
+              gap:3px;
+            ">
+              <span style="font-size:12px;color:${color};opacity:0.75;display:block;white-space:nowrap;">${label}</span>
+              <span style="font-size:19px;font-weight:800;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;">${value}</span>
+              ${sub}
+            </div>
+          `;
+
+          return `
+            <div style="width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font-variant-numeric:tabular-nums;">
+              <!-- Title -->
+              <div style="font-size:22px;font-weight:700;line-height:1.1;text-align:left;">🍼 __NAME__</div>
+              <!-- 3 tiles in a row -->
+              <div style="display:flex;flex-direction:row;gap:8px;width:100%;box-sizing:border-box;">
+                ${tile('⏱ ' + wake_label, wake_val, '', 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.08)', '#fff')}
+                ${tile('🍼 Fed', fed, '', 'rgba(104,133,179,0.14)', 'rgba(104,133,179,0.22)', '#A4C1E8')}
+                ${tile('💤 Last sleep', sleep_dur, sleep_end_html, 'rgba(101,83,127,0.22)', 'rgba(143,124,168,0.20)', '#C5B5DB')}
+              </div>
+            </div>
+          `;
+        ]]]
+    styles:
+      card:
+        - background: transparent
+        - box-shadow: none
+        - border: none
+        - padding: 0 8px 14px 8px
+        - margin: 0
+      grid:
+        - grid-template-areas: "\"header\""
+        - grid-template-columns: 1fr
+        - grid-template-rows: auto
+        - justify-items: stretch
+        - align-items: stretch
+      custom_fields:
+        header:
+          - width: 100%
+          - text-align: left
+          - justify-self: stretch
+          - align-self: stretch
+          - overflow: hidden
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_select.bb_active_activity
+        state_not: none
+    card:
+      type: custom:button-card
+      entity: input_select.bb_active_activity
+      name: >-
+        [[[ 
+          let act = entity.state === 'Unknown' ? 'Unclaimed Timer' : entity.state;
+          return 'Currently ' + act + '  •  ' +
+          (states['sensor.bb_timer_display'] ?
+          states['sensor.bb_timer_display'].state : '0h 0m'); 
+        ]]]
+      icon: >-
+        [[[ if (entity.state == 'Feeding') return 'mdi:baby-bottle'; if
+        (entity.state == 'Sleep') return 'mdi:sleep'; if (entity.state == 'Unknown') return 'mdi:timer-sand'; return 'mdi:baby'; ]]]
+      styles:
+        grid:
+          - grid-template-areas: '"i n edit"'
+          - grid-template-columns: 30px 1fr 30px
+          - align-items: center
+        card:
+          - background-color: >-
+              [[[ if (entity.state == 'Feeding') return '#6885B3'; if
+              (entity.state == 'Sleep') return '#65537F'; if (entity.state == 'Unknown') return '#BA8E23'; return '#2E6D5D'; ]]]
+          - color: "#FFFFFF"
+          - border-radius: 16px
+          - height: 50px
+          - padding: 0 16px
+          - box-shadow: none
+          - animation: pulse 2s infinite
+          - margin-bottom: >-
+              [[[ return states['input_boolean.bb_pumping_active'] &&
+              states['input_boolean.bb_pumping_active'].state === 'on' ? '8px' :
+              '0px'; ]]]
+        name:
+          - font-size: 16px
+          - font-weight: 600
+          - justify-self: center
+        icon:
+          - width: 22px
+          - height: 22px
+          - color: "#FFFFFF"
+          - justify-self: start
+        custom_fields:
+          edit:
+            - justify-self: end
+      custom_fields:
+        edit: >
+          [[[ 
+            if (entity.state === 'Unknown') return `<ha-icon icon="mdi:gesture-tap-button" style="width: 18px; color: #FFFFFF; opacity: 0.8;"></ha-icon>`;
+            return `<ha-icon icon="mdi:pencil" style="width: 18px; color: #FFFFFF; opacity: 0.6;"></ha-icon>`; 
+          ]]]
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.sequence
+          data:
+            sequence:
+              - service: script.bb_prep_timer_edit
+              - service: browser_mod.popup
+                data:
+                  title: "⚙️ Timer Options"
+                  content:
+                    type: vertical-stack
+                    cards:
+                      - type: conditional
+                        conditions:
+                          - condition: state
+                            entity: input_select.bb_active_activity
+                            state: "Unknown"
+                        card:
+                          type: vertical-stack
+                          cards:
+                            - type: markdown
+                              content: "<div style='text-align:center; opacity:0.8; font-size:14px;'>An unclaimed timer is running in Baby Buddy.<br><b>What activity is this?</b></div>"
+                              card_mod:
+                                style: |
+                                  ha-card { background: transparent; box-shadow: none; border: none; padding-bottom: 0px; }
+                            - type: horizontal-stack
+                              cards:
+                                - type: custom:button-card
+                                  name: Feeding
+                                  icon: mdi:baby-bottle
+                                  styles:
+                                    card:
+                                      - background-color: "#6885B3"
+                                      - color: "#FFFFFF"
+                                      - border-radius: 12px
+                                      - font-weight: bold
+                                      - padding: 14px 0
+                                  tap_action:
+                                    action: fire-dom-event
+                                    browser_mod:
+                                      service: browser_mod.sequence
+                                      data:
+                                        sequence:
+                                          - service: input_select.select_option
+                                            data:
+                                              entity_id: input_select.bb_active_activity
+                                              option: Feeding
+                                          - service: browser_mod.close_popup
+                                - type: custom:button-card
+                                  name: Sleep
+                                  icon: mdi:sleep
+                                  styles:
+                                    card:
+                                      - background-color: "#65537F"
+                                      - color: "#FFFFFF"
+                                      - border-radius: 12px
+                                      - font-weight: bold
+                                      - padding: 14px 0
+                                  tap_action:
+                                    action: fire-dom-event
+                                    browser_mod:
+                                      service: browser_mod.sequence
+                                      data:
+                                        sequence:
+                                          - service: input_select.select_option
+                                            data:
+                                              entity_id: input_select.bb_active_activity
+                                              option: Sleep
+                                          - service: browser_mod.close_popup
+                                - type: custom:button-card
+                                  name: Tummy
+                                  icon: mdi:baby
+                                  styles:
+                                    card:
+                                      - background-color: "#2E6D5D"
+                                      - color: "#FFFFFF"
+                                      - border-radius: 12px
+                                      - font-weight: bold
+                                      - padding: 14px 0
+                                  tap_action:
+                                    action: fire-dom-event
+                                    browser_mod:
+                                      service: browser_mod.sequence
+                                      data:
+                                        sequence:
+                                          - service: input_select.select_option
+                                            data:
+                                              entity_id: input_select.bb_active_activity
+                                              option: Tummy
+                                          - service: browser_mod.close_popup
+                      - type: conditional
+                        conditions:
+                          - condition: not
+                            conditions:
+                              - condition: state
+                                entity: input_select.bb_active_activity
+                                state: "Unknown"
+                        card:
+                          type: vertical-stack
+                          cards:
+                            - type: entities
+                              entities:
+                                - entity: input_datetime.bb_edit_start
+                                  name: Start Time
+                              card_mod:
+                                style: |
+                                  ha-card { background: transparent; box-shadow: none; border: none; padding-bottom: 0; }
+                            - type: custom:button-card
+                              name: 💾 Sync to Baby Buddy
+                              styles:
+                                card:
+                                  - background-color: >-
+                                      [[[ if (states['input_select.bb_active_activity'].state == 'Feeding') return '#6885B3'; if (states['input_select.bb_active_activity'].state == 'Sleep') return '#65537F'; return '#2E6D5D'; ]]]
+                                  - color: "#FFFFFF"
+                                  - border-radius: 12px
+                                  - font-weight: bold
+                                  - width: calc(100% - 32px)
+                                  - margin: 0 auto 16px auto
+                              tap_action:
+                                action: fire-dom-event
+                                browser_mod:
+                                  service: browser_mod.sequence
+                                  data:
+                                    sequence:
+                                      - service: script.bb_save_timer_edit
+                                      - service: browser_mod.close_popup
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_boolean.bb_pumping_active
+        state: "on"
+    card:
+      type: custom:button-card
+      entity: input_boolean.bb_pumping_active
+      name: >-
+        [[[ return 'Currently Pumping  •  ' +
+        (states['sensor.bb_pumping_timer_display'] ?
+        states['sensor.bb_pumping_timer_display'].state : '0h 0m'); ]]]
+      icon: mdi:pump
+      styles:
+        grid:
+          - grid-template-areas: '"i n edit"'
+          - grid-template-columns: 30px 1fr 30px
+          - align-items: center
+        card:
+          - background-color: "#A77B85"
+          - color: "#FFFFFF"
+          - border-radius: 16px
+          - height: 50px
+          - padding: 0 16px
+          - box-shadow: none
+          - animation: pulse 2s infinite
+        name:
+          - font-size: 16px
+          - font-weight: 600
+          - justify-self: center
+        icon:
+          - width: 22px
+          - height: 22px
+          - color: "#FFFFFF"
+          - justify-self: start
+        custom_fields:
+          edit:
+            - justify-self: end
+      custom_fields:
+        edit: >
+          [[[ return `<ha-icon icon="mdi:pencil" style="width: 18px; color: #FFFFFF; opacity: 0.6;"></ha-icon>` ]]]
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data:
+            title: ✏️ Edit Pumping Start Time
+            content:
+              type: vertical-stack
+              cards:
+                - type: entities
+                  entities:
+                    - entity: input_datetime.bb_pumping_start
+                      name: Start Time
+                  card_mod:
+                    style: |
+                      ha-card { background: transparent; box-shadow: none; border: none; padding-bottom: 0; }
+                - type: custom:button-card
+                  name: 💾 Save
+                  styles:
+                    card:
+                      - background-color: "#A77B85"
+                      - color: "#FFFFFF"
+                      - border-radius: 12px
+                      - font-weight: bold
+                      - padding: 14px 0
+                      - margin-top: 8px
+                  tap_action:
+                    action: fire-dom-event
+                    browser_mod:
+                      service: browser_mod.close_popup
+
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        entity: input_select.bb_active_activity
+        name: Feeding
+        icon: mdi:baby-bottle
+        show_label: true
+        label: >-
+          [[[ return entity.state === 'Feeding' ? 'Tap to log' : (entity.state
+          !== 'none' ? 'Timer running' : 'Tap to start'); ]]]
+        styles:
+          card:
+            - border-radius: 20px
+            - padding: 20px 8px
+            - box-shadow: none
+          name:
+            - font-size: 14px
+            - font-weight: 600
+            - margin-top: 8px
+          label:
+            - font-size: 11px
+            - opacity: "0.8"
+            - margin-top: 4px
+          icon:
+            - width: 28px
+        state:
+          - value: Feeding
+            color: "#FFFFFF"
+            icon: mdi:stop-circle
+            styles:
+              card:
+                - background-color: "#D32F2F"
+          - operator: default
+            color: "#FFFFFF"
+            styles:
+              card:
+                - background-color: "#6885B3"
+        tap_action:
+          confirmation:
+            text: "[[[ let active = states['input_select.bb_active_activity'].state; if (active !== 'none' && active !== 'Feeding') return 'Baby is currently doing ' + active + '. Stop the ' + active + ' timer and start Feeding?'; return false; ]]]"
+          action: call-service
+          service: script.bb_toggle_feeding
+
+      - type: custom:button-card
+        entity: input_boolean.bb_pumping_active
+        name: Pumping
+        icon: mdi:pump
+        show_label: true
+        label: >-
+          [[[ return entity.state === 'on' ? 'Timer running' : 'Tap to start';
+          ]]]
+        styles:
+          card:
+            - border-radius: 20px
+            - padding: 20px 8px
+            - box-shadow: none
+          name:
+            - font-size: 14px
+            - font-weight: 600
+            - margin-top: 8px
+          label:
+            - font-size: 11px
+            - opacity: "0.8"
+            - margin-top: 4px
+          icon:
+            - width: 28px
+        state:
+          - value: "on"
+            color: "#FFFFFF"
+            icon: mdi:stop-circle
+            styles:
+              card:
+                - background-color: "#D32F2F"
+          - operator: default
+            color: "#FFFFFF"
+            styles:
+              card:
+                - background-color: "#A77B85"
+        tap_action:
+          action: call-service
+          service: script.bb_toggle_pumping
+
+      - type: custom:button-card
+        entity: input_select.bb_active_activity
+        name: Sleep
+        icon: mdi:sleep
+        show_label: true
+        label: >-
+          [[[ return entity.state === 'Sleep' ? 'Tap to log' : (entity.state !==
+          'none' ? 'Timer running' : 'Tap to start'); ]]]
+        styles:
+          card:
+            - border-radius: 20px
+            - padding: 20px 8px
+            - box-shadow: none
+          name:
+            - font-size: 14px
+            - font-weight: 600
+            - margin-top: 8px
+          label:
+            - font-size: 11px
+            - opacity: "0.8"
+            - margin-top: 4px
+          icon:
+            - width: 28px
+        state:
+          - value: Sleep
+            color: "#FFFFFF"
+            icon: mdi:stop-circle
+            styles:
+              card:
+                - background-color: "#D32F2F"
+          - operator: default
+            color: "#FFFFFF"
+            styles:
+              card:
+                - background-color: "#65537F"
+        tap_action:
+          confirmation:
+            text: "[[[ let active = states['input_select.bb_active_activity'].state; if (active !== 'none' && active !== 'Sleep') return 'Baby is currently doing ' + active + '. Stop the ' + active + ' timer and start Sleep?'; return false; ]]]"
+          action: call-service
+          service: script.bb_toggle_sleep
+
+      - type: custom:button-card
+        entity: input_select.bb_active_activity
+        name: Tummy
+        icon: mdi:baby
+        show_label: true
+        label: >-
+          [[[ return entity.state === 'Tummy' ? 'Tap to log' : (entity.state !==
+          'none' ? 'Timer running' : 'Tap to start'); ]]]
+        styles:
+          card:
+            - border-radius: 20px
+            - padding: 20px 8px
+            - box-shadow: none
+          name:
+            - font-size: 14px
+            - font-weight: 600
+            - margin-top: 8px
+          label:
+            - font-size: 11px
+            - opacity: "0.8"
+            - margin-top: 4px
+          icon:
+            - width: 28px
+        state:
+          - value: Tummy
+            color: "#FFFFFF"
+            icon: mdi:stop-circle
+            styles:
+              card:
+                - background-color: "#D32F2F"
+          - operator: default
+            color: "#FFFFFF"
+            styles:
+              card:
+                - background-color: "#2E6D5D"
+        tap_action:
+          confirmation:
+            text: "[[[ let active = states['input_select.bb_active_activity'].state; if (active !== 'none' && active !== 'Tummy') return 'Baby is currently doing ' + active + '. Stop the ' + active + ' timer and start Tummy Time?'; return false; ]]]"
+          action: call-service
+          service: script.bb_toggle_tummy
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_select.bb_active_activity
+        state: Feeding
+    card:
+      type: entities
+      entities:
+        - entity: input_select.bb_feeding_method
+          name: Method
+        - entity: input_select.bb_feeding_type
+          name: Type
+      card_mod:
+        style: >
+          ha-card { background: transparent; box-shadow: none; border: none; padding: 8px 0; }
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_boolean.bb_pumping_active
+        state: "on"
+    card:
+      type: entities
+      entities:
+        - entity: input_number.bb_pump_amount
+          name: Amount (ml)
+      card_mod:
+        style: >
+          ha-card { background: transparent; box-shadow: none; border: none; padding: 8px 0; }
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_select.bb_active_activity
+        state: Sleep
+    card:
+      type: entities
+      entities:
+        - entity: input_boolean.bb_is_night_sleep
+          name: Log as Night Sleep?
+      card_mod:
+        style: >
+          ha-card { background: transparent; box-shadow: none; border: none; padding: 8px 0; }
+
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        name: Yellow
+        entity: input_select.bb_diaper_color
+        show_state: false
+        styles:
+          card:
+            - background-color: "#BA8E23"
+            - color: "#212121"
+            - font-weight: 600
+            - border-radius: 15px
+            - height: 40px
+            - box-shadow: none
+            - opacity: "[[[ return entity.state === 'Yellow' ? '1' : '0.5' ]]]"
+            - border: none
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_diaper_color
+            option: Yellow
+      - type: custom:button-card
+        name: Brown
+        entity: input_select.bb_diaper_color
+        show_state: false
+        styles:
+          card:
+            - background-color: "#766A5C"
+            - color: "#FFFFFF"
+            - font-weight: 600
+            - border-radius: 15px
+            - height: 40px
+            - box-shadow: none
+            - opacity: "[[[ return entity.state === 'Brown' ? '1' : '0.5' ]]]"
+            - border: none
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_diaper_color
+            option: Brown
+      - type: custom:button-card
+        name: Green
+        entity: input_select.bb_diaper_color
+        show_state: false
+        styles:
+          card:
+            - background-color: "#2E6D5D"
+            - color: "#FFFFFF"
+            - font-weight: 600
+            - border-radius: 15px
+            - height: 40px
+            - box-shadow: none
+            - opacity: "[[[ return entity.state === 'Green' ? '1' : '0.5' ]]]"
+            - border: none
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_diaper_color
+            option: Green
+      - type: custom:button-card
+        name: Black
+        entity: input_select.bb_diaper_color
+        show_state: false
+        styles:
+          card:
+            - background-color: "#291B33"
+            - color: "#FFFFFF"
+            - font-weight: 600
+            - border-radius: 15px
+            - height: 40px
+            - box-shadow: none
+            - opacity: "[[[ return entity.state === 'Black' ? '1' : '0.5' ]]]"
+            - border: none
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_diaper_color
+            option: Black
+
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        name: 💧 Wet
+        styles:
+          card:
+            - background-color: "#6885B3"
+            - color: "#FFFFFF"
+            - border-radius: 16px
+            - font-weight: 600
+            - font-size: 14px
+            - padding: 14px 0
+            - border: none
+            - box-shadow: none
+        tap_action:
+          action: call-service
+          service: script.bb_log_diaper_wet
+      - type: custom:button-card
+        name: 💩 Solid
+        styles:
+          card:
+            - background-color: "#766A5C"
+            - color: "#FFFFFF"
+            - border-radius: 16px
+            - font-weight: 600
+            - font-size: 14px
+            - padding: 14px 0
+            - border: none
+            - box-shadow: none
+        tap_action:
+          action: call-service
+          service: script.bb_log_diaper_solid
+      - type: custom:button-card
+        name: 💧💩 Both
+        styles:
+          card:
+            - background: "linear-gradient(135deg, #6885B3 50%, #766A5C 50%)"
+            - border: none
+            - box-shadow: none
+            - overflow: hidden
+            - color: "#FFFFFF"
+            - border-radius: 16px
+            - font-weight: 600
+            - font-size: 14px
+            - padding: 14px 0
+        tap_action:
+          action: call-service
+          service: script.bb_log_diaper_both
+
+  - type: markdown
+    content: "**📊 Summary & Growth**"
+    card_mod:
+      style: >
+        ha-card { background: transparent !important; box-shadow: none !important; border: none !important; border-width: 0px !important; padding: 16px 8px 0px 8px !important; margin-bottom: 0px !important; overflow: hidden !important; opacity: 0.8; }
+
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+      - type: custom:button-card
+        entity: sensor.bb_feedings_24h
+        name: Feeds
+        icon: mdi:baby-bottle
+        show_state: true
+        state_display: |-
+          [[[
+            let data = states['sensor.bb_feedings_raw']?.attributes?.results;
+            if (!data) return '0';
+            let today = new Date();
+            let count = 0;
+            for (let i=0; i<data.length; i++) {
+              let d = new Date(data[i].start);
+              if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) count++;
+            }
+            return count.toString();
+          ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          state:
+            - font-size: 20px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#6885B3"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.bb_diapers_24h
+        name: Diapers
+        icon: mdi:human-baby-changing-table
+        show_state: true
+        state_display: |-
+          [[[
+            let data = states['sensor.bb_changes_raw']?.attributes?.results;
+            if (!data) return '0';
+            let today = new Date();
+            let count = 0;
+            for (let i=0; i<data.length; i++) {
+              let d = new Date(data[i].time);
+              if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) count++;
+            }
+            return count.toString();
+          ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          state:
+            - font-size: 20px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#766A5C"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.bb_sleep_24h
+        name: Sleep
+        icon: mdi:sleep
+        show_state: true
+        state_display: |-
+          [[[
+            let data = states['sensor.bb_sleep_raw']?.attributes?.results;
+            if (!data) return '0h 0m';
+            let today = new Date();
+            let total = 0;
+            for (let i=0; i<data.length; i++) {
+              let start = new Date(data[i].start);
+              let end = data[i].end ? new Date(data[i].end) : new Date();
+              let s_is_today = (start.getDate() === today.getDate() && start.getMonth() === today.getMonth());
+              let e_is_today = (end.getDate() === today.getDate() && end.getMonth() === today.getMonth());
+              if (s_is_today && e_is_today) {
+                total += (end - start) / 1000;
+              } else if (e_is_today && !s_is_today) {
+                let mid = new Date(end); mid.setHours(0,0,0,0);
+                total += (end - mid) / 1000;
+              } else if (s_is_today && !e_is_today) {
+                let eod = new Date(start); eod.setHours(23,59,59,999);
+                total += (eod - start) / 1000;
+              }
+            }
+            let h = Math.floor(total / 3600);
+            let m = Math.floor((total % 3600) / 60);
+            return h + 'h ' + m + 'm';
+          ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          state:
+            - font-size: 20px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#65537F"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.__PREFIX___last_weight
+        name: Weight
+        icon: mdi:scale-bathroom
+        show_state: true
+        show_label: true
+        label: >-
+          [[[ let d = entity.attributes.date || entity.attributes.time ||
+          entity.last_changed; return d ? new
+          Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})
+          : ''; ]]]
+        state_display: >-
+          [[[ return (entity.state && entity.state !== 'unavailable') ?
+          entity.state + ' kg' : '-'; ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          label:
+            - font-size: 10px
+            - opacity: 0.5
+            - margin-top: 4px
+          state:
+            - font-size: 16px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#2E6D5D"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.__PREFIX___last_height
+        name: Height
+        icon: mdi:human-male-height
+        show_state: true
+        show_label: true
+        label: >-
+          [[[ let d = entity.attributes.date || entity.attributes.time ||
+          entity.last_changed; return d ? new
+          Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})
+          : ''; ]]]
+        state_display: >-
+          [[[ return (entity.state && entity.state !== 'unavailable') ?
+          entity.state + ' cm' : '-'; ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          label:
+            - font-size: 10px
+            - opacity: 0.5
+            - margin-top: 4px
+          state:
+            - font-size: 16px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#2E6D5D"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.__PREFIX___last_head_circumference
+        name: Head Circ
+        icon: mdi:tape-measure
+        show_state: true
+        show_label: true
+        label: >-
+          [[[ let d = entity.attributes.date || entity.attributes.time ||
+          entity.last_changed; return d ? new
+          Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})
+          : ''; ]]]
+        state_display: >-
+          [[[ return (entity.state && entity.state !== 'unavailable') ?
+          entity.state + ' cm' : '-'; ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          label:
+            - font-size: 10px
+            - opacity: 0.5
+            - margin-top: 4px
+          state:
+            - font-size: 16px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#A77B85"
+            - margin-bottom: 8px
