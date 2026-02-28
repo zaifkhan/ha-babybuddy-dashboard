@@ -41,10 +41,10 @@ This dashboard relies on a Home Assistant "Package" to cleanly install all the r
 Packages in Home Assistant provide a way to bundle configurations from multiple integrations. One way to organize packages is to create a folder named packages in your Home Assistant configuration directory.
 
 To enable this, open your main configuration.yaml file and add the following entry. This will load all YAML files in the packages folder and its subfolders:
-
-homeassistant:  
-  packages: \!include\_dir\_named packages
-
+```
+   homeassistant:
+     packages: !include_dir_named packages
+```
 *Note: If you are moving configuration to packages, auth\_providers must stay within configuration.yaml. Also, ensure you do not have duplicate homeassistant: blocks.*
 
 ## **🚀 Step 2: Installation**
@@ -61,26 +61,30 @@ I have built a Web Generator that writes all the YAML code for you based on your
 
 1. Open the generator and input your Baby Buddy server details and Child's name.  
 2. **Configure Secrets:** Open your Home Assistant secrets.yaml file and add your API token exactly like this:  
+```
    babybuddy\_token: "Token YOUR\_ACTUAL\_API\_TOKEN"  
-3. **Save the Package:** Copy the **Package YAML** from the generator and save it as a new file named babybuddy\_dashboard.yaml inside your config/packages/ folder.  
-4. Restart Home Assistant to load the new configurations.  
-5. **Create the Dashboard:** Create a new Manual Card in your Lovelace dashboard and paste the **Dashboard YAML** from the generator. Done\!
+```
+4. **Save the Package:** Copy the **Package YAML** from the generator and save it as a new file named babybuddy\_dashboard.yaml inside your config/packages/ folder.  
+5. Restart Home Assistant to load the new configurations.  
+6. **Create the Dashboard:** Create a new Manual Card in your Lovelace dashboard and paste the **Dashboard YAML** from the generator. Done\!
 
 ### **Method B: Manual Setup**
 
 If you prefer to configure the YAML yourself, you can use the raw template files located in the docs/ folder of this repository.
 
 1. **Configure Secrets:** Open your Home Assistant secrets.yaml file and add your API token:  
-   babybuddy\_token: "Token YOUR\_ACTUAL\_API\_TOKEN"  
-2. **Get the Templates:** Open the docs/ folder and locate package\_template.yaml and dashboard\_template.yaml.  
-3. **Find and Replace:** Open both files in a text editor and do a strict "Find and Replace" for the following placeholders:  
+```
+   babybuddy\_token: "Token YOUR\_ACTUAL\_API\_TOKEN"
+```  
+3. **Get the Templates:** Open the docs/ folder and locate package\_template.yaml and dashboard\_template.yaml.  
+4. **Find and Replace:** Open both files in a text editor and do a strict "Find and Replace" for the following placeholders:  
    * \_\_URL\_\_ *(e.g., http://192.168.1.100:8000 \- do not include a trailing slash)*  
    * \_\_ID\_\_ *(e.g., 1\)*  
    * \_\_PREFIX\_\_ *(e.g., alex\_smith \- this must exactly match the entity prefix created by the official integration, e.g., sensor.**alex\_smith**\_last\_weight)*  
    * \_\_NAME\_\_ *(e.g., Alex \- Dashboard template only)*  
-4. **Save the Package:** Save your edited package\_template.yaml into your config/packages/ folder as babybuddy\_dashboard.yaml.  
-5. Restart Home Assistant to load the new configurations.  
-6. **Create the Dashboard:** Create a new Manual Card in your Lovelace dashboard and paste your edited **Dashboard YAML**. Done\!
+5. **Save the Package:** Save your edited package\_template.yaml into your config/packages/ folder as babybuddy\_dashboard.yaml.  
+6. Restart Home Assistant to load the new configurations.  
+7. **Create the Dashboard:** Create a new Manual Card in your Lovelace dashboard and paste your edited **Dashboard YAML**. Done\!
 
 ## **🤝 License & Credits**
 
