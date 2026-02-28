@@ -4,7 +4,7 @@ A beautiful, interactive, and responsive custom dashboard for Home Assistant tha
 
 ![Dashboard Preview](docs/babybuddy-dashboard.png)
 
-## **✨ Features**
+## **Features**
 
 * **Instant Sync:** 2-way background syncing. Start a timer on your phone, and the HA dashboard updates instantly.  
 * **Interactive Active Banners:** Banners show exactly what activity is running and for how long.  
@@ -12,7 +12,7 @@ A beautiful, interactive, and responsive custom dashboard for Home Assistant tha
 * **Orphan Timer Catching:** Warns you if an unclaimed timer is running in Baby Buddy and lets you assign it to an activity with one tap.  
 * **Custom Sleep & Feed Tables:** Formatted historical logs right on the UI.
 
-## **📋 Prerequisites**
+## **Prerequisites**
 
 You must have the following set up and installed before generating your code:
 
@@ -34,7 +34,7 @@ Baby Buddy must be already set up and running. You can host this in multiple way
 * [flex-table-card](https://github.com/custom-cards/flex-table-card) (For the historical logs).  
 * [card-mod](https://github.com/thomasloven/lovelace-card-mod) (For borderless styling).
 
-## **🛠️ Step 1: Enable Packages in Home Assistant**
+## **Step 1: Enable Packages in Home Assistant**
 
 This dashboard relies on a Home Assistant "Package" to cleanly install all the required helpers, sensors, scripts, and automations into a single file.
 
@@ -49,7 +49,7 @@ To enable this, open your main configuration.yaml file and add the following ent
 ```
 *Note: If you are moving configuration to packages, auth\_providers must stay within configuration.yaml. Also, ensure you do not have duplicate homeassistant: blocks.*
 
-## **🚀 Step 2: Installation**
+## **Step 2: Installation**
 
 Because this setup requires custom helpers, REST commands, and specific entity names tailored to your child, you can choose to use the automated Web Generator or set it up manually.
 
@@ -88,6 +88,6 @@ If you prefer to configure the YAML yourself, you can use the raw template files
 6. Restart Home Assistant to load the new configurations.  
 7. **Create the Dashboard:** Create a new Manual Card in your Lovelace dashboard and paste your edited **Dashboard YAML**. Done\!
 
-## **🤝 License & Credits**
+## **License & Credits**
 
 This project is licensed under the MIT License. Feel free to modify and share\!
