@@ -64,7 +64,7 @@ I have built a Web Generator that writes all the YAML code for you based on your
 1. Open the generator and input your Baby Buddy server details and Child's name.  
 2. **Configure Secrets:** Open your Home Assistant secrets.yaml file and add your API token exactly like this:  
 ```
-   babybuddy\_token: "Token YOUR\_ACTUAL\_API\_TOKEN"  
+   babybuddy_token: "Token YOUR ACTUAL_API_TOKEN"  
 ```
 4. **Save the Package:** Copy the **Package YAML** from the generator and save it as a new file named babybuddy\_dashboard.yaml inside your config/packages/ folder.  
 5. Restart Home Assistant to load the new configurations.  
@@ -76,7 +76,7 @@ If you prefer to configure the YAML yourself, you can use the raw template files
 
 1. **Configure Secrets:** Open your Home Assistant secrets.yaml file and add your API token:  
 ```
-   babybuddy\_token: "Token YOUR\_ACTUAL\_API\_TOKEN"
+   babybuddy_token: "Token YOUR_ACTUAL_API_TOKEN"
 ```  
 3. **Get the Templates:** Open the docs/ folder and locate package\_template.yaml and dashboard\_template.yaml.  
 4. **Find and Replace:** Open both files in a text editor and do a strict "Find and Replace" for the following placeholders:  
