@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Buddy HA Dashboard Generator</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; color: #333; max-width: 900px; margin: 0 auto; padding: 2rem; line-height: 1.6; }
+        h1 { color: #6885B3; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        input { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        .output-box { position: relative; margin-top: 1rem; }
+        textarea { width: 100%; height: 300px; font-family: monospace; font-size: 0.85rem; padding: 1rem; background: #2d2d2d; color: #f8f8f2; border: none; border-radius: 6px; box-sizing: border-box; resize: vertical; }
+        button { background: #6885B3; color: white; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #556c92; }
+        .copy-btn { position: absolute; top: 10px; right: 20px; background: rgba(255,255,255,0.2); padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; }
+        .copy-btn:hover { background: rgba(255,255,255,0.4); }
+        .note { font-size: 0.85rem; color: #666; margin-top: 0.25rem; }
+    </style>
+</head>
+<body>
+
+    <h1>🍼 Baby Buddy Dashboard Generator</h1>
+    <p>Fill out your details below. This will instantly generate your Home Assistant Package and Dashboard UI code.</p>
+
+    <div class="card">
+        <h2>1. Your Details</h2>
+        <div class="form-group">
+            <label>Baby Buddy Server URL</label>
+            <input type="text" id="inputUrl" placeholder="http://192.168.1.100:8000" oninput="generateCode()">
+            <div class="note">Do not include a trailing slash.</div>
+        </div>
+        <div class="form-group">
+            <label>Child ID</label>
+            <input type="number" id="inputId" placeholder="1" oninput="generateCode()">
+        </div>
+        <div class="form-group">
+            <label>Child First Name</label>
+            <input type="text" id="inputName" placeholder="Alex" oninput="generateCode()">
+        </div>
+        <div class="form-group">
+            <label>Child HA Entity Prefix (From official integration)</label>
+            <input type="text" id="inputPrefix" placeholder="alex_smith" oninput="generateCode()">
+            <div class="note">Look at your current sensors (e.g., sensor.<b>alex_smith</b>_last_weight). Enter exactly what is bolded.</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Secrets Configuration</h2>
+        <p>For security, we don't ask for your API token here. Open your Home Assistant <code>secrets.yaml</code> file and add this exact line, replacing the placeholder with your actual token:</p>
+        <pre style="background: #2d2d2d; color: #f8f8f2; padding: 1rem; border-radius: 6px;">babybuddy_token: "Token YOUR_ACTUAL_API_TOKEN"</pre>
+    </div>
+
+    <div class="card">
+        <h2>3. Package YAML</h2>
+        <p>Create a file named <code>babybuddy_dashboard.yaml</code> in your <code>config/packages/</code> folder and paste this:</p>
+        <div class="output-box">
+            <button class="copy-btn" onclick="copyToClipboard('pkgOutput', this)">Copy</button>
+            <textarea id="pkgOutput" readonly></textarea>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>4. Dashboard YAML</h2>
+        <p>Create a new Manual card in your Lovelace dashboard and paste this:</p>
+        <div class="output-box">
+            <button class="copy-btn" onclick="copyToClipboard('dashOutput', this)">Copy</button>
+            <textarea id="dashOutput" readonly></textarea>
+        </div>
+    </div>
+
+<script type="text/template" id="tpl-pkg">
+input_select:
+  bb_active_activity:
+    name: "BB Active Activity"
+    options:
+      - none
+      - Feeding
+      - Pumping
+      - Sleep
+      - Tummy
+      - Unknown
+    icon: mdi:timer-outline
+
+  bb_feeding_method:
+    name: "BB Feeding Method"
+    options:
+      - Both breasts
+      - Left breast
+      - Right breast
+      - Bottle
+      - Self fed
+      - Parent fed
+    icon: mdi:baby-bottle
+
+  bb_feeding_type:
+    name: "BB Feeding Type"
+    options:
+      - Breast milk
+      - Formula
+      - Fortified breast milk
+      - Solid food
+    icon: mdi:baby-bottle-outline
+
+  bb_diaper_color:
+    name: "BB Diaper Color"
+    options:
+      - Yellow
+      - Brown
+      - Green
+      - Black
+    icon: mdi:palette
+
+  bb_edit_feeding_method:
+    name: "BB Edit Feeding Method"
+    options:
+      - Both breasts
+      - Left breast
+      - Right breast
+      - Bottle
+      - Self fed
+      - Parent fed
+
+  bb_edit_feeding_type:
+    name: "BB Edit Feeding Type"
+    options:
+      - Breast milk
+      - Formula
+      - Fortified breast milk
+      - Solid food
+
+  bb_edit_diaper_type:
+    name: "BB Edit Diaper Type"
+    options:
+      - Wet
+      - Solid
+      - Wet and Solid
+
+  bb_edit_diaper_color:
+    name: "BB Edit Diaper Color"
+    options:
+      - Yellow
+      - Brown
+      - Green
+      - Black
+
+input_number:
+  bb_amount:
+    name: "BB Feeding Amount"
+    min: 0
+    max: 500
+    step: 5
+    unit_of_measurement: ml
+    icon: mdi:cup-water
+
+  bb_pump_amount:
+    name: "BB Pump Amount"
+    min: 0
+    max: 500
+    step: 5
+    unit_of_measurement: ml
+    icon: mdi:water
+
+input_text:
+  bb_notes:
+    name: "BB Notes"
+    max: 255
+    icon: mdi:note-text
+
+  bb_edit_notes:
+    name: "BB Edit Notes"
+    max: 255
+
+  bb_edit_id:
+    name: "BB Edit Entry ID"
+    max: 20
+
+input_datetime:
+  bb_activity_start:
+    name: "BB Activity Start Time"
+    has_date: true
+    has_time: true
+
+  bb_pumping_start:
+    name: "BB Pumping Start Time"
+    has_date: true
+    has_time: true
+
+  bb_edit_start:
+    name: "BB Edit Start Time"
+    has_date: true
+    has_time: true
+
+  bb_edit_end:
+    name: "BB Edit End Time"
+    has_date: true
+    has_time: true
+
+input_boolean:
+  bb_is_night_sleep:
+    name: "Log as Night Sleep?"
+    icon: mdi:sleep
+  bb_edit_night_sleep:
+    name: "BB Edit Night Sleep"
+    icon: mdi:sleep
+  bb_pumping_active:
+    name: "Pumping Active"
+    icon: mdi:water-pump 
+
+sensor:
+  - platform: rest
+    name: "BB Feedings Raw"
+    resource: "__URL__/api/feedings/?child=__ID__&limit=20&ordering=-start"
+    method: GET
+    headers:
+      Authorization: !secret babybuddy_token
+      Content-Type: "application/json"
+    value_template: "{{ value_json.count }}"
+    json_attributes:
+      - results
+    scan_interval: 10
+
+  - platform: rest
+    name: "BB Active Timer Raw"
+    resource: "__URL__/api/timers/?child=__ID__&active=true"
+    method: GET
+    headers:
+      Authorization: !secret babybuddy_token
+      Content-Type: "application/json"
+    value_template: "{{ value_json.count }}"
+    json_attributes:
+      - results
+    scan_interval: 10
+
+  - platform: rest
+    name: "BB Sleep Raw"
+    resource: "__URL__/api/sleep/?child=__ID__&limit=10&ordering=-start"
+    method: GET
+    headers:
+      Authorization: !secret babybuddy_token
+      Content-Type: "application/json"
+    value_template: "{{ value_json.count }}"
+    json_attributes:
+      - results
+    scan_interval: 10
+
+  - platform: rest
+    name: "BB Tummy Raw"
+    resource: "__URL__/api/tummy-times/?child=__ID__&limit=5&ordering=-start"
+    method: GET
+    headers:
+      Authorization: !secret babybuddy_token
+      Content-Type: "application/json"
+    value_template: "{{ value_json.count }}"
+    json_attributes:
+      - results
+    scan_interval: 10
+
+  - platform: rest
+    name: "BB Changes Raw"
+    resource: "__URL__/api/changes/?child=__ID__&limit=20&ordering=-time"
+    method: GET
+    headers:
+      Authorization: !secret babybuddy_token
+      Content-Type: "application/json"
+    value_template: "{{ value_json.count }}"
+    json_attributes:
+      - results
+    scan_interval: 10
+
+rest_command:
+  bb_patch_active_timer:
+    url: "__URL__/api/timers/{{ state_attr('sensor.bb_active_timer_raw', 'results')[0].id }}/"
+    method: PATCH
+    content_type: "application/json"
+    headers:
+      Authorization: !secret babybuddy_token
+    payload: >-
+      {"start": "{{ states('input_datetime.bb_edit_start') | replace(' ', 'T') }}"}
+
+  bb_patch_feeding:
+    url: "__URL__/api/feedings/{{ states('input_text.bb_edit_id') }}/"
+    method: PATCH
+    content_type: "application/json"
+    headers:
+      Authorization: !secret babybuddy_token
+    payload: >-
+      {"start": "{{ states('input_datetime.bb_edit_start') | replace(' ', 'T') }}",
+       "end": "{{ states('input_datetime.bb_edit_end') | replace(' ', 'T') }}",
+       "method": "{{ states('input_select.bb_edit_feeding_method') | lower | replace(' ', '_') }}",
+       "type": "{{ states('input_select.bb_edit_feeding_type') | lower | replace(' ', '_') }}"}
+
+  bb_patch_sleep:
+    url: "__URL__/api/sleep/{{ states('input_text.bb_edit_id') }}/"
+    method: PATCH
+    content_type: "application/json"
+    headers:
+      Authorization: !secret babybuddy_token
+    payload: >-
+      {"start": "{{ states('input_datetime.bb_edit_start') | replace(' ', 'T') }}",
+       "end": "{{ states('input_datetime.bb_edit_end') | replace(' ', 'T') }}",
+       "nap": {{ 'false' if is_state('input_boolean.bb_edit_night_sleep', 'on') else 'true' }}}
+
+  bb_patch_diaper:
+    url: "__URL__/api/changes/{{ states('input_text.bb_edit_id') }}/"
+    method: PATCH
+    content_type: "application/json"
+    headers:
+      Authorization: !secret babybuddy_token
+    payload: >-
+      {"wet": {{ 'true' if states('input_select.bb_edit_diaper_type') in ['Wet', 'Wet and Solid'] else 'false' }},
+       "solid": {{ 'true' if states('input_select.bb_edit_diaper_type') in ['Solid', 'Wet and Solid'] else 'false' }},
+       "color": "{{ states('input_select.bb_edit_diaper_color') }}",
+       "notes": "{{ states('input_text.bb_edit_notes') }}"}
+       
+  bb_delete_sleep:
+    url: "__URL__/api/sleep/{{ states('input_text.bb_edit_id') }}/"
+    method: DELETE
+    headers:
+      Authorization: !secret babybuddy_token
+  
+  bb_delete_feeding:
+    url: "__URL__/api/feedings/{{ states('input_text.bb_edit_id') }}/"
+    method: DELETE
+    headers:
+      Authorization: !secret babybuddy_token
+  
+  bb_delete_diaper:
+    url: "__URL__/api/changes/{{ states('input_text.bb_edit_id') }}/"
+    method: DELETE
+    headers:
+      Authorization: !secret babybuddy_token
+
+template:
+  - sensor:
+      - name: "BB Sleep Table Data"
+        state: "OK"
+        attributes:
+          entries: >
+            {% set data = state_attr('sensor.bb_sleep_raw', 'results') %}
+            {% set final = namespace(list=[]) %}
+            {% if data %}
+              {% set today_date = now().date() %}
+              {% set ns = namespace(rows=[]) %}
+              {% for s in data %}
+                {% set st = as_datetime(s.start).astimezone() if s.start else none %}
+                {% set en = as_datetime(s.end).astimezone() if s.end else none %}
+                {% if st and (st.date() == today_date or (en and en.date() == today_date) or not s.end or loop.index0 == 0) %}
+                  {% set ns.rows = ns.rows + [s] %}
+                {% endif %}
+              {% endfor %}
+              
+              {% macro ftime(dt) %}
+                {% set d_str = "Today" if dt.date() == now().date() else ("Yesterday" if dt.date() == (now()-timedelta(days=1)).date() else dt.strftime('%b %d')) %}
+                {% set t_str = dt.strftime('%I:%M %p') %}
+                {{ d_str }}, {{ t_str[1:] if t_str.startswith('0') else t_str }}
+              {% endmacro %}
+
+              {% for i in range(ns.rows | length) %}
+                {% set current = ns.rows[i] %}
+                {% set start_dt = as_datetime(current.start).astimezone() %}
+                {% set end_dt = as_datetime(current.end).astimezone() if current.end else none %}
+                
+                {% if i == 0 and end_dt %}
+                  {% set diff = now() - end_dt %}
+                  {% set t_sec = diff.total_seconds() | int %}
+                  {% if t_sec >= 0 %}
+                    {% set dur = (t_sec // 3600) ~ 'h ' ~ ((t_sec % 3600) // 60) ~ 'm' if t_sec >= 3600 else (t_sec // 60) ~ 'm' %}
+                    {% set final.list = final.list + [{"icon": "mdi:sun-clock", "icon_color": "#E5C25A", "time": ftime(end_dt), "type": "Awake", "duration": dur}] %}
+                  {% endif %}
+                {% endif %}
+                
+                {% set d_parts = current.duration.split(':') if current.duration else ['0', '0'] %}
+                {% set h = d_parts[0]|int(0) %}
+                {% set m = d_parts[1]|int(0) %}
+                {% set dur = (h ~ 'h ' ~ m ~ 'm') if h > 0 else (m ~ 'm') %}
+                {% set type = "Nap" if current.nap else "Sleep" %}
+                {% set final.list = final.list + [{"icon": "mdi:sleep", "icon_color": "#65537F", "time": ftime(start_dt), "type": type, "duration": dur}] %}
+                
+                {% if i + 1 < ns.rows | length %}
+                  {% set prev = ns.rows[i+1] %}
+                  {% set p_end = as_datetime(prev.end).astimezone() if prev.end else none %}
+                  {% if p_end %}
+                    {% set diff = start_dt - p_end %}
+                    {% set t_sec = diff.total_seconds() | int %}
+                    {% if t_sec > 0 %}
+                      {% set dur = (t_sec // 3600) ~ 'h ' ~ ((t_sec % 3600) // 60) ~ 'm' if t_sec >= 3600 else (t_sec // 60) ~ 'm' %}
+                      {% set final.list = final.list + [{"icon": "mdi:sun-clock", "icon_color": "#E5C25A", "time": ftime(p_end), "type": "Awake", "duration": dur}] %}
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {{ final.list }}
+
+      - name: "BB Feedings Table Data"
+        state: "OK"
+        attributes:
+          entries: >
+            {% set data = state_attr('sensor.bb_feedings_raw', 'results') %}
+            {% set final = namespace(list=[]) %}
+            {% if data %}
+              {% macro ftime(dt) %}
+                {% set d_str = "Today" if dt.date() == now().date() else ("Yesterday" if dt.date() == (now()-timedelta(days=1)).date() else dt.strftime('%b %d')) %}
+                {% set t_str = dt.strftime('%I:%M %p') %}
+                {{ d_str }}, {{ t_str[1:] if t_str.startswith('0') else t_str }}
+              {% endmacro %}
+              {% for entry in data[:4] %}
+                {% set t = as_datetime(entry.start).astimezone() %}
+                {% set dur_parts = entry.duration.split(':') %}
+                {% set h = dur_parts[0]|int %}
+                {% set m = dur_parts[1]|int %}
+                {% set dur = (h ~ 'h ' ~ m ~ 'm') if h > 0 else (m ~ 'm') %}
+                {% set method = entry.method | replace('_',' ') | title %}
+                {% set final.list = final.list + [{"icon": "mdi:baby-bottle", "icon_color": "#6885B3", "time": ftime(t), "type": method, "duration": dur}] %}
+              {% endfor %}
+            {% endif %}
+            {{ final.list }}
+
+      - name: "BB Diapers Table Data"
+        state: "OK"
+        attributes:
+          entries: >
+            {% set data = state_attr('sensor.bb_changes_raw', 'results') %}
+            {% set final = namespace(list=[]) %}
+            {% if data %}
+              {% macro ftime(dt) %}
+                {% set d_str = "Today" if dt.date() == now().date() else ("Yesterday" if dt.date() == (now()-timedelta(days=1)).date() else dt.strftime('%b %d')) %}
+                {% set t_str = dt.strftime('%I:%M %p') %}
+                {{ d_str }}, {{ t_str[1:] if t_str.startswith('0') else t_str }}
+              {% endmacro %}
+              {% for entry in data[:3] %}
+                {% set t = as_datetime(entry.time).astimezone() %}
+                {% set type = "Wet & Solid" if (entry.wet and entry.solid) else ("Wet" if entry.wet else "Solid") %}
+                {% set color = entry.color | title %}
+                {% set final.list = final.list + [{"icon": "mdi:human-baby-changing-table", "icon_color": "#766A5C", "time": ftime(t), "type": type, "duration": color}] %}
+              {% endfor %}
+            {% endif %}
+            {{ final.list }}
+      
+      - name: "BB Pumping Timer Display"
+        icon: mdi:timer-outline
+        state: >
+          {% if is_state('input_boolean.bb_pumping_active', 'on') %}
+            {% set diff = now() - states('input_datetime.bb_pumping_start') | as_datetime | as_local %}
+            {% set h = diff.seconds // 3600 %}
+            {% set m = (diff.seconds % 3600) // 60 %}
+            {{ h }}h {{ m }}m
+          {% else %}
+            0h 0m
+          {% endif %}
+      
+      - name: "BB Wake Window"
+        icon: mdi:sun-clock
+        state: >
+          {% set act = states('input_select.bb_active_activity') %}
+          {% set data = state_attr('sensor.bb_sleep_raw', 'results') %}
+          {% if data and data | length > 0 %}
+            {% set last_sleep = data[0] %}
+            {% if last_sleep.end is not none %}
+              {% set wake_time = as_datetime(last_sleep.end).astimezone() %}
+              {% if act == 'Sleep' %}
+                {% set timer_data = state_attr('sensor.bb_active_timer_raw', 'results') %}
+                {% if timer_data and timer_data | length > 0 %}
+                  {% set sleep_start = as_datetime(timer_data[0].start).astimezone() %}
+                  {% set diff = sleep_start - wake_time %}
+                  {% set h = diff.seconds // 3600 %}
+                  {% set m = (diff.seconds % 3600) // 60 %}
+                  {{ h }}h {{ m }}m
+                {% else %}
+                  -
+                {% endif %}
+              {% else %}
+                {% set diff = now() - wake_time %}
+                {% set h = diff.seconds // 3600 %}
+                {% set m = (diff.seconds % 3600) // 60 %}
+                {% if diff.days > 0 %}
+                  {{ diff.days }}d {{ h }}h {{ m }}m
+                {% else %}
+                  {{ h }}h {{ m }}m
+                {% endif %}
+              {% endif %}
+            {% else %}
+              -
+            {% endif %}
+          {% else %}
+            -
+          {% endif %}
+      
+      - name: "BB Diapers 24h"
+        state: >
+          {% set cutoff = now() - timedelta(hours=24) %}
+          {% set data = state_attr('sensor.bb_changes_raw', 'results') %}
+          {% if data %}
+            {{ data | selectattr('time', '>', cutoff.isoformat()) | list | count }}
+          {% else %} 0 {% endif %}
+
+      - name: "BB Sleep 24h"
+        icon: mdi:sleep
+        state: >
+          {% set cutoff = now() - timedelta(hours=24) %}
+          {% set data = state_attr('sensor.bb_sleep_raw', 'results') %}
+          {% if data %}
+            {% set ns = namespace(total=0) %}
+            {% for s in data %}
+              {% if s.end is not none and s.end > cutoff.isoformat() %}
+                {% set dur = s.duration.split(':') %}
+                {% set ns.total = ns.total + (dur[0] | int * 60 + dur[1] | int) %}
+              {% endif %}
+            {% endfor %}
+            {{ (ns.total // 60) }}h {{ (ns.total % 60) }}m
+          {% else %} 0h 0m {% endif %}
+
+      - name: "BB Last Sleep Info"
+        icon: mdi:clock-end
+        state: >
+          {% set data = state_attr('sensor.bb_sleep_raw', 'results') %}
+          {% if data and data | length > 0 %}
+            {% set last = data[0] %}
+            {% if last.end is not none %}
+              {% set end_dt = as_datetime(last.end).astimezone() %}
+              {% set diff = now() - end_dt %}
+              {% set h_ago = diff.seconds // 3600 %}
+              {% set m_ago = (diff.seconds % 3600) // 60 %}
+              {% set dur = last.duration.split(':') %}
+              {% set dur_h = dur[0] | int %}
+              {% set dur_m = dur[1] | int %}
+              {% set ago = diff.days ~ 'd ago' if diff.days > 0 else (h_ago ~ 'h ' ~ m_ago ~ 'm ago' if h_ago > 0 else m_ago ~ 'm ago') %}
+              {{ dur_h }}h {{ dur_m }}m · ended {{ ago }}
+            {% else %}
+              Sleeping now
+            {% endif %}
+          {% else %} No data {% endif %}
+
+      - name: "BB Timer Label"
+        icon: mdi:timer
+        state: >
+          {% set act = states('input_select.bb_active_activity') %}
+          {% set data = state_attr('sensor.bb_active_timer_raw', 'results') %}
+          {% if act != 'none' and data and data | length > 0 %}
+            {% set start = as_datetime(data[0].start).astimezone() %}
+            {% set diff = now() - start %}
+            {% set h = diff.seconds // 3600 %}
+            {% set m = (diff.seconds % 3600) // 60 %}
+            {% set s = diff.seconds % 60 %}
+            {{ act }} · {{ '%02d' % h }}:{{ '%02d' % m }}:{{ '%02d' % s }}
+          {% else %}
+            Ready
+          {% endif %}
+          
+      - name: "BB Feedings 24h"
+        state: >
+          {% set cutoff = now() - timedelta(hours=24) %}
+          {% set data = state_attr('sensor.bb_feedings_raw', 'results') %}
+          {% if data %}
+            {% set ns = namespace(count=0) %}
+            {% for entry in data %}
+              {% if as_datetime(entry.start) > cutoff %}
+                {% set ns.count = ns.count + 1 %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.count }}
+          {% else %} 0 {% endif %}
+
+      - name: "BB Time Since Feed"
+        icon: mdi:clock-start
+        state: >
+          {% set data = state_attr('sensor.bb_feedings_raw', 'results') %}
+          {% if data and data|length > 0 %}
+            {% set last = as_datetime(data[0].start).astimezone() %}
+            {% set diff = now() - last %}
+            {% set hours = diff.seconds // 3600 %}
+            {% set minutes = (diff.seconds % 3600) // 60 %}
+            {% set days = diff.days %}
+            {% if days > 0 %} {{ days }}d {{ hours }}h ago
+            {% elif hours > 0 %} {{ hours }}h {{ minutes }}m ago
+            {% else %} {{ minutes }}m ago
+            {% endif %}
+          {% else %} No data {% endif %}
+
+      - name: "BB Timer Display"
+        icon: mdi:timer-outline
+        state: >
+          {% if states('input_select.bb_active_activity') != 'none' %}
+            {% set diff = now() - states('input_datetime.bb_activity_start') | as_datetime | as_local %}
+            {% set h = diff.seconds // 3600 %}
+            {% set m = (diff.seconds % 3600) // 60 %}
+            {{ h }}h {{ m }}m
+          {% else %}
+            0h 0m
+          {% endif %}
+
+script:
+  bb_toggle_feeding:
+    alias: BB Toggle Feeding
+    icon: mdi:baby-bottle
+    sequence:
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: switch.timer___PREFIX__
+          state: 'off'
+        sequence:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.timer___PREFIX__
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.bb_active_activity
+          data:
+            option: Feeding
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.bb_activity_start
+          data:
+            datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+            
+      - conditions:
+        - condition: state
+          entity_id: switch.timer___PREFIX__
+          state: 'on'
+        - condition: state
+          entity_id: input_select.bb_active_activity
+          state: Feeding
+        sequence:
+        - action: babybuddy.add_feeding
+          target:
+            entity_id: switch.timer___PREFIX__
+          data:
+            type: '{{ states(''input_select.bb_feeding_type'') }}'
+            method: '{{ states(''input_select.bb_feeding_method'') }}'
+            timer: true
+        - delay:
+            milliseconds: 500
+        - action: homeassistant.update_entity
+          target:
+            entity_id: 
+              - sensor.bb_feedings_raw
+              - sensor.bb_active_timer_raw
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.bb_active_activity
+          data:
+            option: none
+            
+      default:
+      - variables:
+          prev: '{{ states(''input_select.bb_active_activity'') }}'
+      - action: switch.turn_off
+        target:
+          entity_id: switch.timer___PREFIX__
+      - delay:
+          milliseconds: 500
+      - action: switch.turn_on
+        target:
+          entity_id: switch.timer___PREFIX__
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.bb_active_activity
+        data:
+          option: Feeding
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.bb_activity_start
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+  
+  bb_toggle_sleep:
+    alias: BB Toggle Sleep
+    icon: mdi:sleep
+    sequence:
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: switch.timer___PREFIX__
+          state: 'off'
+        sequence:
+        - action: switch.turn_on
+          target: { entity_id: switch.timer___PREFIX__ }
+        - action: input_select.select_option
+          target: { entity_id: input_select.bb_active_activity }
+          data: { option: Sleep }
+        - action: input_datetime.set_datetime
+          target: { entity_id: input_datetime.bb_activity_start }
+          data: { datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}' }
+          
+      - conditions:
+        - condition: state
+          entity_id: switch.timer___PREFIX__
+          state: 'on'
+        - condition: state
+          entity_id: input_select.bb_active_activity
+          state: Sleep
+        sequence:
+        - action: babybuddy.add_sleep
+          target:
+            entity_id: switch.timer___PREFIX__
+          data:
+            timer: true
+            nap: "{{ is_state('input_boolean.bb_is_night_sleep', 'off') }}"
+        - delay:
+            milliseconds: 500
+        - action: homeassistant.update_entity
+          target:
+            entity_id: 
+              - sensor.bb_sleep_raw
+              - sensor.bb_active_timer_raw
+        - action: input_select.select_option
+          target: { entity_id: input_select.bb_active_activity }
+          data: { option: none }
+        - action: input_boolean.turn_off
+          target: { entity_id: input_boolean.bb_is_night_sleep }
+          
+      default:
+      - variables:
+          prev: '{{ states(''input_select.bb_active_activity'') }}'
+      - action: switch.turn_off
+        target: { entity_id: switch.timer___PREFIX__ }
+      - delay: { milliseconds: 500 }
+      - action: switch.turn_on
+        target: { entity_id: switch.timer___PREFIX__ }
+      - action: input_select.select_option
+        target: { entity_id: input_select.bb_active_activity }
+        data: { option: Sleep }
+      - action: input_datetime.set_datetime
+        target: { entity_id: input_datetime.bb_activity_start }
+        data: { datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}' }
+  
+  bb_toggle_tummy:
+    alias: BB Toggle Tummy
+    icon: mdi:baby
+    sequence:
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: switch.timer___PREFIX__
+          state: 'off'
+        sequence:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.timer___PREFIX__
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.bb_active_activity
+          data:
+            option: Tummy
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.bb_activity_start
+          data:
+            datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}' 
+            
+      - conditions:
+        - condition: state
+          entity_id: switch.timer___PREFIX__
+          state: 'on'
+        - condition: state
+          entity_id: input_select.bb_active_activity
+          state: Tummy
+        sequence:
+        - action: babybuddy.add_tummy_time
+          target:
+            entity_id: switch.timer___PREFIX__
+          data:
+            timer: true
+        - delay:
+            milliseconds: 500
+        - action: homeassistant.update_entity
+          target:
+            entity_id: 
+              - sensor.bb_tummy_raw
+              - sensor.bb_active_timer_raw
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.bb_active_activity
+          data:
+            option: none
+            
+      default:
+      - variables:
+          prev: '{{ states(''input_select.bb_active_activity'') }}'
+      - action: switch.turn_off
+        target:
+          entity_id: switch.timer___PREFIX__
+      - delay:
+          milliseconds: 500
+      - action: switch.turn_on
+        target:
+          entity_id: switch.timer___PREFIX__
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.bb_active_activity
+        data:
+          option: Tummy
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.bb_activity_start
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+  
+  bb_toggle_pumping:
+    alias: BB Toggle Pumping
+    icon: mdi:pump
+    sequence:
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: input_boolean.bb_pumping_active
+          state: 'off'
+        sequence:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.bb_pumping_active
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.bb_pumping_start
+          data:
+            datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+      - conditions:
+        - condition: state
+          entity_id: input_boolean.bb_pumping_active
+          state: 'on'
+        sequence:
+        - action: babybuddy.add_pumping
+          target:
+            entity_id: sensor.__PREFIX__
+          data:
+            amount: '{{ states(''input_number.bb_pump_amount'') | float(0) }}'
+            start: '{{ states(''input_datetime.bb_pumping_start'') }}'
+            end: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.bb_pumping_active
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.bb_pump_amount
+          data:
+            value: 0
+  
+  bb_log_diaper_wet:
+    alias: BB Log Diaper Wet
+    icon: mdi:water
+    sequence:
+    - action: babybuddy.add_diaper_change
+      target:
+        entity_id: sensor.__PREFIX__
+      data:
+        type: "Wet"
+        color: "{{ states('input_select.bb_diaper_color') }}"
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.bb_diaper_color
+      data:
+        option: "Yellow"
+    - delay:
+        milliseconds: 500
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.bb_changes_raw
+
+  bb_log_diaper_solid:
+    alias: BB Log Diaper Solid
+    icon: mdi:paper-roll
+    sequence:
+    - action: babybuddy.add_diaper_change
+      target:
+        entity_id: sensor.__PREFIX__
+      data:
+        type: "Solid"
+        color: "{{ states('input_select.bb_diaper_color') }}"
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.bb_diaper_color
+      data:
+        option: "Yellow"
+    - delay:
+        milliseconds: 500
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.bb_changes_raw
+
+  bb_log_diaper_both:
+    alias: BB Log Diaper Both
+    icon: mdi:water-plus
+    sequence:
+    - action: babybuddy.add_diaper_change
+      target:
+        entity_id: sensor.__PREFIX__
+      data:
+        type: "Wet and Solid"
+        color: "{{ states('input_select.bb_diaper_color') }}"
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.bb_diaper_color
+      data:
+        option: "Yellow"
+    - delay:
+        milliseconds: 500
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.bb_changes_raw
+  
+  bb_edit_last_feeding:
+    alias: BB Edit Last Feeding
+    sequence:
+    - variables:
+        results: '{{ state_attr(''sensor.bb_feedings_raw'', ''results'') }}'
+    - condition: template
+      value_template: '{{ results is not none and results | length > 0 }}'
+    - variables:
+        entry: '{{ results[0] }}'
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.bb_edit_id
+      data:
+        value: '{{ entry.id | string }}'
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.bb_edit_start
+      data:
+        datetime: '{{ as_datetime(entry.start).astimezone().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.bb_edit_end
+      data:
+        datetime: '{{ as_datetime(entry.end).astimezone().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.bb_edit_feeding_method
+      data:
+        option: >-
+          {% set method_map = {
+            'both breasts': 'Both breasts',
+            'left breast': 'Left breast',
+            'right breast': 'Right breast',
+            'bottle': 'Bottle',
+            'self fed': 'Self fed',
+            'parent fed': 'Parent fed'
+          } %}
+          {{ method_map.get(entry.method | string | lower, 'Bottle') }}
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.bb_edit_feeding_type
+      data:
+        option: >-
+          {% set type_map = {
+            'breast milk': 'Breast milk',
+            'formula': 'Formula',
+            'fortified breast milk': 'Fortified breast milk',
+            'solid food': 'Solid food'
+          } %}
+          {{ type_map.get(entry.type | string | lower, 'Breast milk') }}
+
+  bb_save_edit_feeding:
+    alias: BB Save Edit Feeding
+    sequence:
+    - action: rest_command.bb_patch_feeding
+    - delay:
+        milliseconds: 500
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.bb_feedings_raw
+
+  bb_edit_last_sleep:
+    alias: BB Edit Last Sleep
+    sequence:
+    - variables:
+        results: '{{ state_attr(''sensor.bb_sleep_raw'', ''results'') }}'
+    - condition: template
+      value_template: '{{ results is not none and results | length > 0 }}'
+    - variables:
+        entry: '{{ results[0] }}'
+    - action: input_text.set_value
+      target: { entity_id: input_text.bb_edit_id }
+      data: { value: '{{ entry.id | string }}' }
+    - action: input_datetime.set_datetime
+      target: { entity_id: input_datetime.bb_edit_start }
+      data: { datetime: '{{ as_datetime(entry.start).astimezone().strftime(''%Y-%m-%d %H:%M:%S'') }}' }
+    - action: input_datetime.set_datetime
+      target: { entity_id: input_datetime.bb_edit_end }
+      data: { datetime: '{{ as_datetime(entry.end).astimezone().strftime(''%Y-%m-%d %H:%M:%S'') }}' }
+    - choose:
+        - conditions: "{{ entry.nap == false }}"
+          sequence:
+            - action: input_boolean.turn_on
+              target: { entity_id: input_boolean.bb_edit_night_sleep }
+      default:
+        - action: input_boolean.turn_off
+          target: { entity_id: input_boolean.bb_edit_night_sleep }
+
+  bb_save_edit_sleep:
+    alias: BB Save Edit Sleep
+    sequence:
+    - action: rest_command.bb_patch_sleep
+    - delay:
+        milliseconds: 500
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.bb_sleep_raw
+
+  bb_edit_last_diaper:
+    alias: BB Edit Last Diaper
+    sequence:
+    - variables:
+        results: '{{ state_attr(''sensor.bb_changes_raw'', ''results'') }}'
+    - condition: template
+      value_template: '{{ results is not none and results | length > 0 }}'
+    - variables:
+        entry: '{{ results[0] }}'
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.bb_edit_id
+      data:
+        value: '{{ entry.id | string }}'
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.bb_edit_diaper_type
+      data:
+        option: '{% if entry.wet and entry.solid %}Wet and Solid{% elif entry.wet %}Wet{% else %}Solid{% endif %}'
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.bb_edit_diaper_color
+      data:
+        option: '{{ entry.color | title }}'
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.bb_edit_notes
+      data:
+        value: '{{ entry.notes | default('''', true) }}'
+
+  bb_save_edit_diaper:
+    alias: BB Save Edit Diaper
+    sequence:
+    - action: rest_command.bb_patch_diaper
+    - delay:
+        milliseconds: 500
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.bb_changes_raw
+
+  bb_delete_last_sleep:
+    sequence:
+      - action: rest_command.bb_delete_sleep
+      - action: browser_mod.close_popup
+      - delay:
+          milliseconds: 500
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.bb_sleep_raw
+
+  bb_delete_last_feeding:
+    sequence:
+      - action: rest_command.bb_delete_feeding
+      - action: browser_mod.close_popup
+      - delay:
+          milliseconds: 500
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.bb_feedings_raw
+
+  bb_delete_last_diaper:
+    sequence:
+      - action: rest_command.bb_delete_diaper
+      - action: browser_mod.close_popup
+      - delay:
+          milliseconds: 500
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.bb_changes_raw
+
+  bb_prep_timer_edit:
+    alias: BB Prep Timer Edit
+    sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.bb_edit_start
+        data:
+          datetime: "{{ states('input_datetime.bb_activity_start') }}"
+
+  bb_save_timer_edit:
+    alias: BB Save Timer Edit
+    sequence:
+      - action: rest_command.bb_patch_active_timer
+      - delay:
+          milliseconds: 500
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.bb_active_timer_raw
+
+automation:
+  - alias: "Baby Buddy: Sync Active Timer to Dashboard"
+    description: "Keeps HA helpers in sync with Baby Buddy's server timers."
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: sensor.bb_active_timer_raw
+      - platform: time_pattern
+        minutes: "/1"
+    condition:
+      - condition: template
+        value_template: "{{ states('sensor.bb_active_timer_raw') not in ['unknown', 'unavailable'] }}"
+      - condition: template
+        value_template: >
+          {{ (now() - states.input_select.bb_active_activity.last_updated).total_seconds() > 15 }}
+    action:
+      - choose:
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.bb_active_timer_raw
+                above: 0
+              - condition: state
+                entity_id: input_select.bb_active_activity
+                state: "none"
+            sequence:
+              - variables:
+                  timer_data: "{{ state_attr('sensor.bb_active_timer_raw', 'results')[0] }}"
+                  bb_start: "{{ as_datetime(timer_data.start).astimezone().strftime('%Y-%m-%d %H:%M:%S') }}"
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.bb_active_activity
+                data:
+                  option: "Unknown"
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.bb_activity_start
+                data:
+                  datetime: "{{ bb_start }}"
+
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.bb_active_timer_raw
+                above: 0
+            sequence:
+              - variables:
+                  timer_data: "{{ state_attr('sensor.bb_active_timer_raw', 'results')[0] }}"
+                  bb_start: "{{ as_datetime(timer_data.start).astimezone().strftime('%Y-%m-%d %H:%M:%S') }}"
+              - condition: template
+                value_template: >
+                  {{ states('input_datetime.bb_activity_start') != bb_start }}
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.bb_activity_start
+                data:
+                  datetime: "{{ bb_start }}"
+
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.bb_active_timer_raw
+                below: 1
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: input_select.bb_active_activity
+                    state: "none"
+            sequence:
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.bb_active_activity
+                data:
+                  option: "none"
+</script>
+
+<script type="text/template" id="tpl-dash">
+type: vertical-stack
+cards:
+  - type: custom:button-card
+    show_name: false
+    show_icon: false
+    show_state: false
+    custom_fields:
+      header: |
+        [[[
+          let active = states['input_select.bb_active_activity']?.state ?? 'none';
+          let wake_label = active === 'Sleep' ? 'Last awake' : 'Awake';
+          let wake_val = states['sensor.bb_wake_window']?.state ?? '-';
+          if (['unknown','unavailable','none'].includes(wake_val)) wake_val = '-';
+
+          let fed_raw = states['sensor.bb_time_since_feed']?.state ?? '-';
+          let fed = ['unknown','unavailable','none'].includes(fed_raw) ? '-'
+                  : (fed_raw.includes('ago') ? fed_raw : fed_raw + ' ago');
+
+          let sl_raw = states['sensor.bb_last_sleep_info']?.state ?? '';
+          let sleep_dur = '-', sleep_end = '';
+          if (sl_raw && !['unknown','unavailable','none'].includes(sl_raw)) {
+            let sp = sl_raw.split('·');
+            sleep_dur = sp[0]?.trim() ?? '-';
+            sleep_end = sp[1]?.trim() ?? '';
+          }
+
+          let sleep_end_html = sleep_end
+            ? `<span style="font-size:12px;opacity:0.5;margin-top:3px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sleep_end}</span>`
+            : '';
+
+          const tile = (label, value, sub, bg, border, color) => `
+            <div style="
+              flex:1;
+              display:flex;
+              flex-direction:column;
+              justify-content:center;
+              padding:10px 12px;
+              border-radius:14px;
+              background:${bg};
+              border:1px solid ${border};
+              min-width:0;
+              box-sizing:border-box;
+              gap:3px;
+            ">
+              <span style="font-size:12px;color:${color};opacity:0.75;display:block;white-space:nowrap;">${label}</span>
+              <span style="font-size:19px;font-weight:800;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;">${value}</span>
+              ${sub}
+            </div>
+          `;
+
+          return `
+            <div style="width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font-variant-numeric:tabular-nums;">
+              <div style="font-size:22px;font-weight:700;line-height:1.1;text-align:left;">🍼 __NAME__</div>
+              <div style="display:flex;flex-direction:row;gap:8px;width:100%;box-sizing:border-box;">
+                ${tile('⏱ ' + wake_label, wake_val, '', 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.08)', '#fff')}
+                ${tile('🍼 Fed', fed, '', 'rgba(104,133,179,0.14)', 'rgba(104,133,179,0.22)', '#A4C1E8')}
+                ${tile('💤 Last sleep', sleep_dur, sleep_end_html, 'rgba(101,83,127,0.22)', 'rgba(143,124,168,0.20)', '#C5B5DB')}
+              </div>
+            </div>
+          `;
+        ]]]
+    styles:
+      card:
+        - background: transparent
+        - box-shadow: none
+        - border: none
+        - padding: 0 8px 14px 8px
+        - margin: 0
+      grid:
+        - grid-template-areas: "\"header\""
+        - grid-template-columns: 1fr
+        - grid-template-rows: auto
+        - justify-items: stretch
+        - align-items: stretch
+      custom_fields:
+        header:
+          - width: 100%
+          - text-align: left
+          - justify-self: stretch
+          - align-self: stretch
+          - overflow: hidden
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_select.bb_active_activity
+        state_not: none
+    card:
+      type: custom:button-card
+      entity: input_select.bb_active_activity
+      name: >-
+        [[[ 
+          let act = entity.state === 'Unknown' ? 'Unclaimed Timer' : entity.state;
+          return 'Currently ' + act + '  •  ' +
+          (states['sensor.bb_timer_display'] ?
+          states['sensor.bb_timer_display'].state : '0h 0m'); 
+        ]]]
+      icon: >-
+        [[[ if (entity.state == 'Feeding') return 'mdi:baby-bottle'; if
+        (entity.state == 'Sleep') return 'mdi:sleep'; if (entity.state == 'Unknown') return 'mdi:timer-sand'; return 'mdi:baby'; ]]]
+      styles:
+        grid:
+          - grid-template-areas: '"i n edit"'
+          - grid-template-columns: 30px 1fr 30px
+          - align-items: center
+        card:
+          - background-color: >-
+              [[[ if (entity.state == 'Feeding') return '#6885B3'; if
+              (entity.state == 'Sleep') return '#65537F'; if (entity.state == 'Unknown') return '#BA8E23'; return '#2E6D5D'; ]]]
+          - color: "#FFFFFF"
+          - border-radius: 16px
+          - height: 50px
+          - padding: 0 16px
+          - box-shadow: none
+          - animation: pulse 2s infinite
+          - margin-bottom: >-
+              [[[ return states['input_boolean.bb_pumping_active'] &&
+              states['input_boolean.bb_pumping_active'].state === 'on' ? '8px' :
+              '0px'; ]]]
+        name:
+          - font-size: 16px
+          - font-weight: 600
+          - justify-self: center
+        icon:
+          - width: 22px
+          - height: 22px
+          - color: "#FFFFFF"
+          - justify-self: start
+        custom_fields:
+          edit:
+            - justify-self: end
+      custom_fields:
+        edit: >
+          [[[ 
+            if (entity.state === 'Unknown') return `<ha-icon icon="mdi:gesture-tap-button" style="width: 18px; color: #FFFFFF; opacity: 0.8;"></ha-icon>`;
+            return `<ha-icon icon="mdi:pencil" style="width: 18px; color: #FFFFFF; opacity: 0.6;"></ha-icon>`; 
+          ]]]
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.sequence
+          data:
+            sequence:
+              - service: script.bb_prep_timer_edit
+              - service: browser_mod.popup
+                data:
+                  title: "⚙️ Timer Options"
+                  content:
+                    type: vertical-stack
+                    cards:
+                      - type: conditional
+                        conditions:
+                          - condition: state
+                            entity: input_select.bb_active_activity
+                            state: "Unknown"
+                        card:
+                          type: vertical-stack
+                          cards:
+                            - type: markdown
+                              content: "<div style='text-align:center; opacity:0.8; font-size:14px;'>An unclaimed timer is running in Baby Buddy.<br><b>What activity is this?</b></div>"
+                              card_mod:
+                                style: |
+                                  ha-card { background: transparent; box-shadow: none; border: none; padding-bottom: 0px; }
+                            - type: horizontal-stack
+                              cards:
+                                - type: custom:button-card
+                                  name: Feeding
+                                  icon: mdi:baby-bottle
+                                  styles:
+                                    card:
+                                      - background-color: "#6885B3"
+                                      - color: "#FFFFFF"
+                                      - border-radius: 12px
+                                      - font-weight: bold
+                                      - padding: 14px 0
+                                  tap_action:
+                                    action: fire-dom-event
+                                    browser_mod:
+                                      service: browser_mod.sequence
+                                      data:
+                                        sequence:
+                                          - service: input_select.select_option
+                                            data:
+                                              entity_id: input_select.bb_active_activity
+                                              option: Feeding
+                                          - service: browser_mod.close_popup
+                                - type: custom:button-card
+                                  name: Sleep
+                                  icon: mdi:sleep
+                                  styles:
+                                    card:
+                                      - background-color: "#65537F"
+                                      - color: "#FFFFFF"
+                                      - border-radius: 12px
+                                      - font-weight: bold
+                                      - padding: 14px 0
+                                  tap_action:
+                                    action: fire-dom-event
+                                    browser_mod:
+                                      service: browser_mod.sequence
+                                      data:
+                                        sequence:
+                                          - service: input_select.select_option
+                                            data:
+                                              entity_id: input_select.bb_active_activity
+                                              option: Sleep
+                                          - service: browser_mod.close_popup
+                                - type: custom:button-card
+                                  name: Tummy
+                                  icon: mdi:baby
+                                  styles:
+                                    card:
+                                      - background-color: "#2E6D5D"
+                                      - color: "#FFFFFF"
+                                      - border-radius: 12px
+                                      - font-weight: bold
+                                      - padding: 14px 0
+                                  tap_action:
+                                    action: fire-dom-event
+                                    browser_mod:
+                                      service: browser_mod.sequence
+                                      data:
+                                        sequence:
+                                          - service: input_select.select_option
+                                            data:
+                                              entity_id: input_select.bb_active_activity
+                                              option: Tummy
+                                          - service: browser_mod.close_popup
+                      - type: conditional
+                        conditions:
+                          - condition: not
+                            conditions:
+                              - condition: state
+                                entity: input_select.bb_active_activity
+                                state: "Unknown"
+                        card:
+                          type: vertical-stack
+                          cards:
+                            - type: entities
+                              entities:
+                                - entity: input_datetime.bb_edit_start
+                                  name: Start Time
+                              card_mod:
+                                style: |
+                                  ha-card { background: transparent; box-shadow: none; border: none; padding-bottom: 0; }
+                            - type: custom:button-card
+                              name: 💾 Sync to Baby Buddy
+                              styles:
+                                card:
+                                  - background-color: >-
+                                      [[[ if (states['input_select.bb_active_activity'].state == 'Feeding') return '#6885B3'; if (states['input_select.bb_active_activity'].state == 'Sleep') return '#65537F'; return '#2E6D5D'; ]]]
+                                  - color: "#FFFFFF"
+                                  - border-radius: 12px
+                                  - font-weight: bold
+                                  - width: calc(100% - 32px)
+                                  - margin: 0 auto 16px auto
+                              tap_action:
+                                action: fire-dom-event
+                                browser_mod:
+                                  service: browser_mod.sequence
+                                  data:
+                                    sequence:
+                                      - service: script.bb_save_timer_edit
+                                      - service: browser_mod.close_popup
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_boolean.bb_pumping_active
+        state: "on"
+    card:
+      type: custom:button-card
+      entity: input_boolean.bb_pumping_active
+      name: >-
+        [[[ return 'Currently Pumping  •  ' +
+        (states['sensor.bb_pumping_timer_display'] ?
+        states['sensor.bb_pumping_timer_display'].state : '0h 0m'); ]]]
+      icon: mdi:pump
+      styles:
+        grid:
+          - grid-template-areas: '"i n edit"'
+          - grid-template-columns: 30px 1fr 30px
+          - align-items: center
+        card:
+          - background-color: "#A77B85"
+          - color: "#FFFFFF"
+          - border-radius: 16px
+          - height: 50px
+          - padding: 0 16px
+          - box-shadow: none
+          - animation: pulse 2s infinite
+        name:
+          - font-size: 16px
+          - font-weight: 600
+          - justify-self: center
+        icon:
+          - width: 22px
+          - height: 22px
+          - color: "#FFFFFF"
+          - justify-self: start
+        custom_fields:
+          edit:
+            - justify-self: end
+      custom_fields:
+        edit: >
+          [[[ return `<ha-icon icon="mdi:pencil" style="width: 18px; color: #FFFFFF; opacity: 0.6;"></ha-icon>` ]]]
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data:
+            title: ✏️ Edit Pumping Start Time
+            content:
+              type: vertical-stack
+              cards:
+                - type: entities
+                  entities:
+                    - entity: input_datetime.bb_pumping_start
+                      name: Start Time
+                  card_mod:
+                    style: |
+                      ha-card { background: transparent; box-shadow: none; border: none; padding-bottom: 0; }
+                - type: custom:button-card
+                  name: 💾 Save
+                  styles:
+                    card:
+                      - background-color: "#A77B85"
+                      - color: "#FFFFFF"
+                      - border-radius: 12px
+                      - font-weight: bold
+                      - padding: 14px 0
+                      - margin-top: 8px
+                  tap_action:
+                    action: fire-dom-event
+                    browser_mod:
+                      service: browser_mod.close_popup
+
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        entity: input_select.bb_active_activity
+        name: Feeding
+        icon: mdi:baby-bottle
+        show_label: true
+        label: >-
+          [[[ return entity.state === 'Feeding' ? 'Tap to log' : (entity.state
+          !== 'none' ? 'Timer running' : 'Tap to start'); ]]]
+        styles:
+          card:
+            - border-radius: 20px
+            - padding: 20px 8px
+            - box-shadow: none
+          name:
+            - font-size: 14px
+            - font-weight: 600
+            - margin-top: 8px
+          label:
+            - font-size: 11px
+            - opacity: "0.8"
+            - margin-top: 4px
+          icon:
+            - width: 28px
+        state:
+          - value: Feeding
+            color: "#FFFFFF"
+            icon: mdi:stop-circle
+            styles:
+              card:
+                - background-color: "#D32F2F"
+          - operator: default
+            color: "#FFFFFF"
+            styles:
+              card:
+                - background-color: "#6885B3"
+        tap_action:
+          confirmation:
+            text: "[[[ let active = states['input_select.bb_active_activity'].state; if (active !== 'none' && active !== 'Feeding') return 'Baby is currently doing ' + active + '. Stop the ' + active + ' timer and start Feeding?'; return false; ]]]"
+          action: call-service
+          service: script.bb_toggle_feeding
+
+      - type: custom:button-card
+        entity: input_boolean.bb_pumping_active
+        name: Pumping
+        icon: mdi:pump
+        show_label: true
+        label: >-
+          [[[ return entity.state === 'on' ? 'Timer running' : 'Tap to start';
+          ]]]
+        styles:
+          card:
+            - border-radius: 20px
+            - padding: 20px 8px
+            - box-shadow: none
+          name:
+            - font-size: 14px
+            - font-weight: 600
+            - margin-top: 8px
+          label:
+            - font-size: 11px
+            - opacity: "0.8"
+            - margin-top: 4px
+          icon:
+            - width: 28px
+        state:
+          - value: "on"
+            color: "#FFFFFF"
+            icon: mdi:stop-circle
+            styles:
+              card:
+                - background-color: "#D32F2F"
+          - operator: default
+            color: "#FFFFFF"
+            styles:
+              card:
+                - background-color: "#A77B85"
+        tap_action:
+          action: call-service
+          service: script.bb_toggle_pumping
+
+      - type: custom:button-card
+        entity: input_select.bb_active_activity
+        name: Sleep
+        icon: mdi:sleep
+        show_label: true
+        label: >-
+          [[[ return entity.state === 'Sleep' ? 'Tap to log' : (entity.state !==
+          'none' ? 'Timer running' : 'Tap to start'); ]]]
+        styles:
+          card:
+            - border-radius: 20px
+            - padding: 20px 8px
+            - box-shadow: none
+          name:
+            - font-size: 14px
+            - font-weight: 600
+            - margin-top: 8px
+          label:
+            - font-size: 11px
+            - opacity: "0.8"
+            - margin-top: 4px
+          icon:
+            - width: 28px
+        state:
+          - value: Sleep
+            color: "#FFFFFF"
+            icon: mdi:stop-circle
+            styles:
+              card:
+                - background-color: "#D32F2F"
+          - operator: default
+            color: "#FFFFFF"
+            styles:
+              card:
+                - background-color: "#65537F"
+        tap_action:
+          confirmation:
+            text: "[[[ let active = states['input_select.bb_active_activity'].state; if (active !== 'none' && active !== 'Sleep') return 'Baby is currently doing ' + active + '. Stop the ' + active + ' timer and start Sleep?'; return false; ]]]"
+          action: call-service
+          service: script.bb_toggle_sleep
+
+      - type: custom:button-card
+        entity: input_select.bb_active_activity
+        name: Tummy
+        icon: mdi:baby
+        show_label: true
+        label: >-
+          [[[ return entity.state === 'Tummy' ? 'Tap to log' : (entity.state !==
+          'none' ? 'Timer running' : 'Tap to start'); ]]]
+        styles:
+          card:
+            - border-radius: 20px
+            - padding: 20px 8px
+            - box-shadow: none
+          name:
+            - font-size: 14px
+            - font-weight: 600
+            - margin-top: 8px
+          label:
+            - font-size: 11px
+            - opacity: "0.8"
+            - margin-top: 4px
+          icon:
+            - width: 28px
+        state:
+          - value: Tummy
+            color: "#FFFFFF"
+            icon: mdi:stop-circle
+            styles:
+              card:
+                - background-color: "#D32F2F"
+          - operator: default
+            color: "#FFFFFF"
+            styles:
+              card:
+                - background-color: "#2E6D5D"
+        tap_action:
+          confirmation:
+            text: "[[[ let active = states['input_select.bb_active_activity'].state; if (active !== 'none' && active !== 'Tummy') return 'Baby is currently doing ' + active + '. Stop the ' + active + ' timer and start Tummy Time?'; return false; ]]]"
+          action: call-service
+          service: script.bb_toggle_tummy
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_select.bb_active_activity
+        state: Feeding
+    card:
+      type: entities
+      entities:
+        - entity: input_select.bb_feeding_method
+          name: Method
+        - entity: input_select.bb_feeding_type
+          name: Type
+      card_mod:
+        style: >
+          ha-card { background: transparent; box-shadow: none; border: none; padding: 8px 0; }
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_boolean.bb_pumping_active
+        state: "on"
+    card:
+      type: entities
+      entities:
+        - entity: input_number.bb_pump_amount
+          name: Amount (ml)
+      card_mod:
+        style: >
+          ha-card { background: transparent; box-shadow: none; border: none; padding: 8px 0; }
+
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_select.bb_active_activity
+        state: Sleep
+    card:
+      type: entities
+      entities:
+        - entity: input_boolean.bb_is_night_sleep
+          name: Log as Night Sleep?
+      card_mod:
+        style: >
+          ha-card { background: transparent; box-shadow: none; border: none; padding: 8px 0; }
+
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        name: Yellow
+        entity: input_select.bb_diaper_color
+        show_state: false
+        styles:
+          card:
+            - background-color: "#BA8E23"
+            - color: "#212121"
+            - font-weight: 600
+            - border-radius: 15px
+            - height: 40px
+            - box-shadow: none
+            - opacity: "[[[ return entity.state === 'Yellow' ? '1' : '0.5' ]]]"
+            - border: none
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_diaper_color
+            option: Yellow
+      - type: custom:button-card
+        name: Brown
+        entity: input_select.bb_diaper_color
+        show_state: false
+        styles:
+          card:
+            - background-color: "#766A5C"
+            - color: "#FFFFFF"
+            - font-weight: 600
+            - border-radius: 15px
+            - height: 40px
+            - box-shadow: none
+            - opacity: "[[[ return entity.state === 'Brown' ? '1' : '0.5' ]]]"
+            - border: none
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_diaper_color
+            option: Brown
+      - type: custom:button-card
+        name: Green
+        entity: input_select.bb_diaper_color
+        show_state: false
+        styles:
+          card:
+            - background-color: "#2E6D5D"
+            - color: "#FFFFFF"
+            - font-weight: 600
+            - border-radius: 15px
+            - height: 40px
+            - box-shadow: none
+            - opacity: "[[[ return entity.state === 'Green' ? '1' : '0.5' ]]]"
+            - border: none
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_diaper_color
+            option: Green
+      - type: custom:button-card
+        name: Black
+        entity: input_select.bb_diaper_color
+        show_state: false
+        styles:
+          card:
+            - background-color: "#291B33"
+            - color: "#FFFFFF"
+            - font-weight: 600
+            - border-radius: 15px
+            - height: 40px
+            - box-shadow: none
+            - opacity: "[[[ return entity.state === 'Black' ? '1' : '0.5' ]]]"
+            - border: none
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_diaper_color
+            option: Black
+
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        name: 💧 Wet
+        styles:
+          card:
+            - background-color: "#6885B3"
+            - color: "#FFFFFF"
+            - border-radius: 16px
+            - font-weight: 600
+            - font-size: 14px
+            - padding: 14px 0
+            - border: none
+            - box-shadow: none
+        tap_action:
+          action: call-service
+          service: script.bb_log_diaper_wet
+      - type: custom:button-card
+        name: 💩 Solid
+        styles:
+          card:
+            - background-color: "#766A5C"
+            - color: "#FFFFFF"
+            - border-radius: 16px
+            - font-weight: 600
+            - font-size: 14px
+            - padding: 14px 0
+            - border: none
+            - box-shadow: none
+        tap_action:
+          action: call-service
+          service: script.bb_log_diaper_solid
+      - type: custom:button-card
+        name: 💧💩 Both
+        styles:
+          card:
+            - background: "linear-gradient(135deg, #6885B3 50%, #766A5C 50%)"
+            - border: none
+            - box-shadow: none
+            - overflow: hidden
+            - color: "#FFFFFF"
+            - border-radius: 16px
+            - font-weight: 600
+            - font-size: 14px
+            - padding: 14px 0
+        tap_action:
+          action: call-service
+          service: script.bb_log_diaper_both
+
+  - type: markdown
+    content: "**📊 Summary & Growth**"
+    card_mod:
+      style: >
+        ha-card { background: transparent !important; box-shadow: none !important; border: none !important; border-width: 0px !important; padding: 16px 8px 0px 8px !important; margin-bottom: 0px !important; overflow: hidden !important; opacity: 0.8; }
+
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+      - type: custom:button-card
+        entity: sensor.bb_feedings_24h
+        name: Feeds
+        icon: mdi:baby-bottle
+        show_state: true
+        state_display: |-
+          [[[
+            let data = states['sensor.bb_feedings_raw']?.attributes?.results;
+            if (!data) return '0';
+            let today = new Date();
+            let count = 0;
+            for (let i=0; i<data.length; i++) {
+              let d = new Date(data[i].start);
+              if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) count++;
+            }
+            return count.toString();
+          ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          state:
+            - font-size: 20px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#6885B3"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.bb_diapers_24h
+        name: Diapers
+        icon: mdi:human-baby-changing-table
+        show_state: true
+        state_display: |-
+          [[[
+            let data = states['sensor.bb_changes_raw']?.attributes?.results;
+            if (!data) return '0';
+            let today = new Date();
+            let count = 0;
+            for (let i=0; i<data.length; i++) {
+              let d = new Date(data[i].time);
+              if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) count++;
+            }
+            return count.toString();
+          ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          state:
+            - font-size: 20px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#766A5C"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.bb_sleep_24h
+        name: Sleep
+        icon: mdi:sleep
+        show_state: true
+        state_display: |-
+          [[[
+            let data = states['sensor.bb_sleep_raw']?.attributes?.results;
+            if (!data) return '0h 0m';
+            let today = new Date();
+            let total = 0;
+            for (let i=0; i<data.length; i++) {
+              let start = new Date(data[i].start);
+              let end = data[i].end ? new Date(data[i].end) : new Date();
+              let s_is_today = (start.getDate() === today.getDate() && start.getMonth() === today.getMonth());
+              let e_is_today = (end.getDate() === today.getDate() && end.getMonth() === today.getMonth());
+              if (s_is_today && e_is_today) {
+                total += (end - start) / 1000;
+              } else if (e_is_today && !s_is_today) {
+                let mid = new Date(end); mid.setHours(0,0,0,0);
+                total += (end - mid) / 1000;
+              } else if (s_is_today && !e_is_today) {
+                let eod = new Date(start); eod.setHours(23,59,59,999);
+                total += (eod - start) / 1000;
+              }
+            }
+            let h = Math.floor(total / 3600);
+            let m = Math.floor((total % 3600) / 60);
+            return h + 'h ' + m + 'm';
+          ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          state:
+            - font-size: 20px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#65537F"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.__PREFIX___last_weight
+        name: Weight
+        icon: mdi:scale-bathroom
+        show_state: true
+        show_label: true
+        label: >-
+          [[[ let d = entity.attributes.date || entity.attributes.time ||
+          entity.last_changed; return d ? new
+          Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})
+          : ''; ]]]
+        state_display: >-
+          [[[ return (entity.state && entity.state !== 'unavailable') ?
+          entity.state + ' kg' : '-'; ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          label:
+            - font-size: 10px
+            - opacity: 0.5
+            - margin-top: 4px
+          state:
+            - font-size: 16px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#2E6D5D"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.__PREFIX___last_height
+        name: Height
+        icon: mdi:human-male-height
+        show_state: true
+        show_label: true
+        label: >-
+          [[[ let d = entity.attributes.date || entity.attributes.time ||
+          entity.last_changed; return d ? new
+          Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})
+          : ''; ]]]
+        state_display: >-
+          [[[ return (entity.state && entity.state !== 'unavailable') ?
+          entity.state + ' cm' : '-'; ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          label:
+            - font-size: 10px
+            - opacity: 0.5
+            - margin-top: 4px
+          state:
+            - font-size: 16px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#2E6D5D"
+            - margin-bottom: 8px
+      - type: custom:button-card
+        entity: sensor.__PREFIX___last_head_circumference
+        name: Head Circ
+        icon: mdi:tape-measure
+        show_state: true
+        show_label: true
+        label: >-
+          [[[ let d = entity.attributes.date || entity.attributes.time ||
+          entity.last_changed; return d ? new
+          Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})
+          : ''; ]]]
+        state_display: >-
+          [[[ return (entity.state && entity.state !== 'unavailable') ?
+          entity.state + ' cm' : '-'; ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 16px 8px
+            - background: rgba(255,255,255,0.03)
+            - box-shadow: none
+          name:
+            - font-size: 12px
+            - opacity: 0.6
+            - margin-bottom: 4px
+          label:
+            - font-size: 10px
+            - opacity: 0.5
+            - margin-top: 4px
+          state:
+            - font-size: 16px
+            - font-weight: 600
+          icon:
+            - width: 24px
+            - color: "#A77B85"
+            - margin-bottom: 8px
+</script>
+
+<script>
+    function generateCode() {
+        // 1. Get user inputs
+        const url = document.getElementById('inputUrl').value.trim() || 'http://192.168.1.100:8000';
+        const id = document.getElementById('inputId').value.trim() || '1';
+        const prefix = document.getElementById('inputPrefix').value.trim() || 'alex_smith';
+        const name = document.getElementById('inputName').value.trim() || 'Alex';
+
+        // 2. Grab raw templates
+        let pkgRaw = document.getElementById('tpl-pkg').innerHTML;
+        let dashRaw = document.getElementById('tpl-dash').innerHTML;
+
+        // 3. Replace placeholders globally
+        pkgRaw = pkgRaw.replace(/__URL__/g, url);
+        pkgRaw = pkgRaw.replace(/__ID__/g, id);
+        pkgRaw = pkgRaw.replace(/__PREFIX__/g, prefix);
+
+        dashRaw = dashRaw.replace(/__NAME__/g, name);
+        dashRaw = dashRaw.replace(/__PREFIX__/g, prefix);
+
+        // 4. Output to text areas
+        document.getElementById('pkgOutput').value = pkgRaw.trim();
+        document.getElementById('dashOutput').value = dashRaw.trim();
+    }
+
+    function copyToClipboard(elementId, btn) {
+        const text = document.getElementById(elementId);
+        text.select();
+        document.execCommand("copy");
+        btn.innerText = "Copied!";
+        setTimeout(() => btn.innerText = "Copy", 2000);
+    }
+
+    // Run once on load to populate defaults
+    window.onload = generateCode;
+</script>
+</body>
+</html>
