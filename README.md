@@ -43,3 +43,5 @@ Because this setup requires custom helpers, REST commands, and specific entity n
    ```yaml
    homeassistant:
      packages: !include_dir_named packages
+5. Restart Home Assistant to load the new configurations.
+6. **Create the Dashboard:** Create a new Manual Card in your Lovelace dashboard and paste the Dashboard YAML from the generator. Done!   
