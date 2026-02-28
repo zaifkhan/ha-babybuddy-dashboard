@@ -32,7 +32,7 @@ Baby Buddy must be already set up and running. You can host this in multiple way
 
 Because this setup requires custom helpers, REST commands, and specific entity names. Use the **Web Generator** that writes all the code for you based on your setup.
 
-### [👉 Click here to open the YAML Generator](#) 
+### [👉 Click here to open the YAML Generator](https://zaifkhan.github.io/ha-babybuddy-dashboard/) 
 
 ### Setup Instructions:
 1. Open the generator and input your Baby Buddy server details and Child's name.
