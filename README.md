@@ -2,6 +2,8 @@
 
 A beautiful, interactive, and responsive custom dashboard for Home Assistant that tightly integrates with the [Baby Buddy](https://github.com/babybuddy/babybuddy) backend.
 
+![Dashboard Preview](docs/babybuddy-dashboard.png)
+
 ## **✨ Features**
 
 * **Instant Sync:** 2-way background syncing. Start a timer on your phone, and the HA dashboard updates instantly.  
