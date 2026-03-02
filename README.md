@@ -53,6 +53,14 @@ To enable this, open your main configuration.yaml file and add the following ent
 
 Because this setup requires custom helpers, REST commands, and specific entity names tailored to your child, you can choose to use the automated Web Generator or set it up manually.
 
+**Important Note on Entity Names
+
+This dashboard relies on the exact entity ID prefix created by the official Baby Buddy HACS integration (e.g., sensor.alex_smith, switch.timer_alex_smith).
+
+* You must enter this exact prefix into the generator.
+
+* Do not rename the base entity ID or timer switch ID inside Home Assistant after setup, or the dashboard buttons and stats will break!
+
 ### **Method A: Web Generator (Recommended)**
 
 I have built a Web Generator that writes all the YAML code for you based on your setup to prevent indentation or formatting errors.
