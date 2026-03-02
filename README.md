@@ -53,7 +53,7 @@ To enable this, open your main configuration.yaml file and add the following ent
 
 Because this setup requires custom helpers, REST commands, and specific entity names tailored to your child, you can choose to use the automated Web Generator or set it up manually.
 
-**Important Note on Entity Names
+**Important Note on Entity Names**
 
 This dashboard relies on the exact entity ID prefix created by the official Baby Buddy HACS integration (e.g., sensor.alex_smith, switch.timer_alex_smith).
 
