@@ -530,12 +530,12 @@ script:
     - choose:
       - conditions:
         - condition: state
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
           state: 'off'
         sequence:
         - action: switch.turn_on
           target:
-            entity_id: switch.timer___PREFIX__
+            entity_id: switch.__PREFIX___timer
         - action: input_select.select_option
           target:
             entity_id: input_select.bb_active_activity
@@ -549,7 +549,7 @@ script:
             
       - conditions:
         - condition: state
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
           state: 'on'
         - condition: state
           entity_id: input_select.bb_active_activity
@@ -557,7 +557,7 @@ script:
         sequence:
         - action: babybuddy.add_feeding
           target:
-            entity_id: switch.timer___PREFIX__
+            entity_id: switch.__PREFIX___timer
           data:
             type: '{{ states(''input_select.bb_feeding_type'') }}'
             method: '{{ states(''input_select.bb_feeding_method'') }}'
@@ -580,12 +580,12 @@ script:
           prev: '{{ states(''input_select.bb_active_activity'') }}'
       - action: switch.turn_off
         target:
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
       - delay:
           milliseconds: 500
       - action: switch.turn_on
         target:
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
       - action: input_select.select_option
         target:
           entity_id: input_select.bb_active_activity
@@ -604,11 +604,11 @@ script:
     - choose:
       - conditions:
         - condition: state
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
           state: 'off'
         sequence:
         - action: switch.turn_on
-          target: { entity_id: switch.timer___PREFIX__ }
+          target: { entity_id: switch.__PREFIX___timer }
         - action: input_select.select_option
           target: { entity_id: input_select.bb_active_activity }
           data: { option: Sleep }
@@ -618,7 +618,7 @@ script:
           
       - conditions:
         - condition: state
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
           state: 'on'
         - condition: state
           entity_id: input_select.bb_active_activity
@@ -626,7 +626,7 @@ script:
         sequence:
         - action: babybuddy.add_sleep
           target:
-            entity_id: switch.timer___PREFIX__
+            entity_id: switch.__PREFIX___timer
           data:
             timer: true
             nap: "{{ is_state('input_boolean.bb_is_night_sleep', 'off') }}"
@@ -647,10 +647,10 @@ script:
       - variables:
           prev: '{{ states(''input_select.bb_active_activity'') }}'
       - action: switch.turn_off
-        target: { entity_id: switch.timer___PREFIX__ }
+        target: { entity_id: switch.__PREFIX___timer }
       - delay: { milliseconds: 500 }
       - action: switch.turn_on
-        target: { entity_id: switch.timer___PREFIX__ }
+        target: { entity_id: switch.__PREFIX___timer }
       - action: input_select.select_option
         target: { entity_id: input_select.bb_active_activity }
         data: { option: Sleep }
@@ -665,12 +665,12 @@ script:
     - choose:
       - conditions:
         - condition: state
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
           state: 'off'
         sequence:
         - action: switch.turn_on
           target:
-            entity_id: switch.timer___PREFIX__
+            entity_id: switch.__PREFIX___timer
         - action: input_select.select_option
           target:
             entity_id: input_select.bb_active_activity
@@ -684,7 +684,7 @@ script:
             
       - conditions:
         - condition: state
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
           state: 'on'
         - condition: state
           entity_id: input_select.bb_active_activity
@@ -692,7 +692,7 @@ script:
         sequence:
         - action: babybuddy.add_tummy_time
           target:
-            entity_id: switch.timer___PREFIX__
+            entity_id: switch.__PREFIX___timer
           data:
             timer: true
         - delay:
@@ -713,12 +713,12 @@ script:
           prev: '{{ states(''input_select.bb_active_activity'') }}'
       - action: switch.turn_off
         target:
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
       - delay:
           milliseconds: 500
       - action: switch.turn_on
         target:
-          entity_id: switch.timer___PREFIX__
+          entity_id: switch.__PREFIX___timer
       - action: input_select.select_option
         target:
           entity_id: input_select.bb_active_activity
@@ -755,7 +755,7 @@ script:
         sequence:
         - action: babybuddy.add_pumping
           target:
-            entity_id: sensor.__PREFIX__
+            entity_id: sensor.baby___PREFIX__
           data:
             amount: '{{ states(''input_number.bb_pump_amount'') | float(0) }}'
             start: '{{ states(''input_datetime.bb_pumping_start'') }}'
@@ -775,7 +775,7 @@ script:
     sequence:
     - action: babybuddy.add_diaper_change
       target:
-        entity_id: sensor.__PREFIX__
+        entity_id: sensor.baby___PREFIX__
       data:
         type: "Wet"
         color: "{{ states('input_select.bb_diaper_color') }}"
@@ -796,7 +796,7 @@ script:
     sequence:
     - action: babybuddy.add_diaper_change
       target:
-        entity_id: sensor.__PREFIX__
+        entity_id: sensor.baby___PREFIX__
       data:
         type: "Solid"
         color: "{{ states('input_select.bb_diaper_color') }}"
@@ -817,7 +817,7 @@ script:
     sequence:
     - action: babybuddy.add_diaper_change
       target:
-        entity_id: sensor.__PREFIX__
+        entity_id: sensor.baby___PREFIX__
       data:
         type: "Wet and Solid"
         color: "{{ states('input_select.bb_diaper_color') }}"
