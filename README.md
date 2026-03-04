@@ -53,9 +53,9 @@ To enable this, open your main configuration.yaml file and add the following ent
 
 Because this setup requires custom helpers, REST commands, and specific entity names tailored to your child, you can choose to use the automated Web Generator or set it up manually.
 
-**Important Note on Entity Names**
+**⚠️ Important Note on Entity Names**
 
-This dashboard relies on the exact entity ID prefix created by the official Baby Buddy HACS integration (e.g., sensor.alex_smith, switch.timer_alex_smith).
+This dashboard relies on the exact entity ID prefix created by the official Baby Buddy HACS integration. For example, if your child's timer is switch.alex_smith_timer, your prefix is alex_smith.
 
 * You must enter this exact prefix into the generator.
 
@@ -95,6 +95,16 @@ If you prefer to configure the YAML yourself, you can use the raw template files
 5. **Save the Package:** Save your edited package\_template.yaml into your config/packages/ folder as babybuddy\_dashboard.yaml.  
 6. Restart Home Assistant to load the new configurations.  
 7. **Create the Dashboard:** Create a new Manual Card in your Lovelace dashboard and paste your edited **Dashboard YAML**. Done\!
+
+## **❓ FAQ / Troubleshooting**
+
+**Q: The buttons aren't working or the stats are empty. How do I fix the entity IDs?**  
+**A:** This dashboard hooks into the specific entities created by the official HACS add-on. To find your correct prefix, go to **Settings \> Devices & Services \> Baby Buddy** in Home Assistant. Find the timer switch for your child (e.g., switch.alex\_smith\_timer). Your prefix is the part before \_timer (in this case, alex\_smith). The generated code specifically targets sensor.baby\_\[prefix\] for service calls and switch.\[prefix\]\_timer for toggling. If you manually renamed these entities, you must change them back or the dashboard will fail.  
+**Q: I get a template error like 'value\_json' is undefined when I click a button.**  
+**A:** This means Home Assistant is trying to fetch updated data from your Baby Buddy server before the server has finished saving your previous action. Open your babybuddy\_dashboard.yaml file, find the lines that say delay: milliseconds: 500 (inside the toggle and edit scripts), and increase them to 1000 or 1500\.  
+*(Note: Also double-check that your secrets.yaml token includes the word Token with a space before your actual key\!)*  
+**Q: The dashboard isn't updating or pulling any data at all.**  
+**A:** Double-check the URL you provided in the generator or configuration. It must **not** end with a trailing slash (e.g., http://192.168.1.100:8000). Additionally, if you are running Baby Buddy and Home Assistant on the same machine, you must use your actual local network IP address (e.g., 192.168.1.X). Do not use localhost or 127.0.0.1, as Home Assistant will try to connect to itself inside its own container.
 
 ## **License & Credits**
 
