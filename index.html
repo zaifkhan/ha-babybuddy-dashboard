@@ -2073,6 +2073,72 @@ cards:
             - width: 24px
             - color: "#A77B85"
             - margin-bottom: 8px
+
+  - type: custom:flex-table-card
+    title: 💤 Recent Sleep
+    entities:
+      include: sensor.bb_sleep_table_data
+    css:
+      table+: 'box-shadow: none; border: none; padding: 0 16px;'
+      tbody tr:nth-child(odd): 'background-color: transparent;'
+      tbody tr:hover: 'background-color: rgba(255,255,255,0.05);'
+    columns:
+      - name: ''
+        data: entries
+        modify: '''<ha-icon icon="'' + x.icon + ''" style="color: '' + x.icon_color + ''"></ha-icon>'''
+      - name: Time
+        data: entries
+        modify: x.time
+      - name: Activity
+        data: entries
+        modify: x.type
+      - name: Duration
+        data: entries
+        modify: x.duration
+
+  - type: custom:flex-table-card
+    title: 🍼 Recent Feeds
+    entities:
+      include: sensor.bb_feedings_table_data
+    css:
+      table+: 'box-shadow: none; border: none; padding: 0 16px;'
+      tbody tr:nth-child(odd): 'background-color: transparent;'
+      tbody tr:hover: 'background-color: rgba(255,255,255,0.05);'
+    columns:
+      - name: ''
+        data: entries
+        modify: '''<ha-icon icon="'' + x.icon + ''" style="color: '' + x.icon_color + ''"></ha-icon>'''
+      - name: Time
+        data: entries
+        modify: x.time
+      - name: Method
+        data: entries
+        modify: x.type
+      - name: Duration
+        data: entries
+        modify: x.duration
+
+  - type: custom:flex-table-card
+    title: 🧻 Recent Diapers
+    entities:
+      include: sensor.bb_diapers_table_data
+    css:
+      table+: 'box-shadow: none; border: none; padding: 0 16px;'
+      tbody tr:nth-child(odd): 'background-color: transparent;'
+      tbody tr:hover: 'background-color: rgba(255,255,255,0.05);'
+    columns:
+      - name: ''
+        data: entries
+        modify: '''<ha-icon icon="'' + x.icon + ''" style="color: '' + x.icon_color + ''"></ha-icon>'''
+      - name: Time
+        data: entries
+        modify: x.time
+      - name: Type
+        data: entries
+        modify: x.type
+      - name: Color
+        data: entries
+        modify: x.duration
 </script>
 
 <script>
