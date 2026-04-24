@@ -1,0 +1,91 @@
+type: custom:button-card
+show_name: false
+show_icon: false
+show_state: false
+custom_fields:
+  header: |
+    [[[
+      let active = states['input_select.bb_active_activity']?.state ?? 'none';
+      let wake_label = active === 'Sleep' ? 'Last awake' : 'Awake';
+      let wake_val = states['sensor.bb_wake_window']?.state ?? '-';
+      if (['unknown','unavailable','none'].includes(wake_val)) wake_val = '-';
+
+      let fed_raw = states['sensor.bb_time_since_feed']?.state ?? '-';
+      let fed = ['unknown','unavailable','none'].includes(fed_raw) ? '-'
+              : (fed_raw.includes('ago') ? fed_raw : fed_raw + ' ago');
+
+      let sl_raw = states['sensor.bb_last_sleep_info']?.state ?? '';
+      let sleep_dur = '-', sleep_end = '';
+      if (sl_raw && !['unknown','unavailable','none'].includes(sl_raw)) {
+        let sp = sl_raw.split('·');
+        sleep_dur = sp[0]?.trim() ?? '-';
+        sleep_end = sp[1]?.trim() ?? '';
+      }
+
+      let sleep_end_html = sleep_end
+        ? `<span style="font-size:12px;opacity:0.5;margin-top:3px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sleep_end}</span>`
+        : '';
+
+      const tile = (label, value, sub, bg, border, color) => `
+        <div style="
+          flex:1;
+          display:flex;
+          flex-direction:column;
+          justify-content:center;
+          padding:10px 12px;
+          border-radius:14px;
+          background:${bg};
+          border:1px solid ${border};
+          min-width:0;
+          box-sizing:border-box;
+          gap:3px;
+        ">
+          <span style="font-size:12px;color:${color};opacity:0.55;display:block;white-space:nowrap;">${label}</span>
+          <span style="font-size:19px;font-weight:800;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;">${value}</span>
+          ${sub}
+        </div>
+      `;
+
+      return `
+        <div style="width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font-variant-numeric:tabular-nums;">
+          <!-- Title -->
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:22px;font-weight:700;line-height:1.1;text-align:left;">🍼 Nil Tomris</div>
+            <div style="font-size:13px;opacity:0.55;font-weight:500;">${(() => {
+              let birth = new Date('2026-02-14');
+              let now = new Date();
+              let days = Math.floor((now - birth) / 86400000);
+              let weeks = Math.floor(days / 7);
+              let rem = days % 7;
+              return weeks + ' weeks ' + rem + ' day' + (rem !== 1 ? 's' : '') + ' old';
+            })()}</div>
+          </div>
+          <!-- 3 tiles in a row -->
+          <div style="display:flex;flex-direction:row;gap:8px;width:100%;box-sizing:border-box;">
+            ${tile('⏱ ' + wake_label, wake_val, '', 'rgba(104,133,179,0.06)', 'rgba(104,133,179,0.08)', '#fff')}
+            ${tile('🍼 Fed', fed, '', 'rgba(104,133,179,0.14)', 'rgba(104,133,179,0.22)', '#A4C1E8')}
+            ${tile('💤 Last sleep', sleep_dur, sleep_end_html, 'rgba(101,83,127,0.22)', 'rgba(143,124,168,0.20)', '#C5B5DB')}
+          </div>
+        </div>
+      `;
+    ]]]
+styles:
+  card:
+    - background: transparent
+    - box-shadow: none
+    - border: none
+    - padding: 0 8px 14px 8px
+    - margin: 0
+  grid:
+    - grid-template-areas: "\"header\""
+    - grid-template-columns: 1fr
+    - grid-template-rows: auto
+    - justify-items: stretch
+    - align-items: stretch
+  custom_fields:
+    header:
+      - width: 100%
+      - text-align: left
+      - justify-self: stretch
+      - align-self: stretch
+      - overflow: hidden
