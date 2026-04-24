@@ -1,0 +1,225 @@
+type: grid
+columns: 3
+square: false
+cards:
+  - type: custom:button-card
+    entity: sensor.bb_feedings_24h
+    name: Feeds
+    icon: mdi:baby-bottle
+    show_state: true
+    state_display: |-
+      [[[
+        let data = states['sensor.bb_feedings_raw']?.attributes?.results;
+        if (!data) return '0';
+        let today = new Date();
+        let count = 0;
+        for (let i=0; i<data.length; i++) {
+          let d = new Date(data[i].start);
+          if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) count++;
+        }
+        return count.toString();
+      ]]]
+    styles:
+      card:
+        - border-radius: 16px
+        - padding: 16px 8px
+        - background: rgba(255,255,255,0.03)
+        - box-shadow: none
+      name:
+        - font-size: 12px
+        - opacity: 0.6
+        - margin-bottom: 4px
+      state:
+        - font-size: 20px
+        - font-weight: 600
+      icon:
+        - width: 24px
+        - color: "#6885B3"
+        - margin-bottom: 8px
+  - type: custom:button-card
+    entity: sensor.bb_diapers_24h
+    name: Diapers
+    icon: mdi:human-baby-changing-table
+    show_state: true
+    state_display: |-
+      [[[
+        let data = states['sensor.bb_changes_raw']?.attributes?.results;
+        let today = new Date();
+        let wet = 0, solid = 0;
+        if (data) {
+          for (let i=0; i<data.length; i++) {
+            let d = new Date(data[i].time);
+            if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) {
+              if (data[i].wet) wet++;
+              if (data[i].solid) solid++;
+            }
+          }
+        }
+        return '💧' + wet + '  💩' + solid;
+      ]]]
+    styles:
+      card:
+        - border-radius: 16px
+        - padding: 16px 8px
+        - background: rgba(255,255,255,0.03)
+        - box-shadow: none
+      name:
+        - font-size: 12px
+        - opacity: 0.6
+        - margin-bottom: 4px
+      state:
+        - font-size: 20px
+        - font-weight: 600
+      icon:
+        - width: 24px
+        - color: "#766A5C"
+        - margin-bottom: 8px
+  - type: custom:button-card
+    entity: sensor.bb_sleep_24h
+    name: Sleep
+    icon: mdi:sleep
+    show_state: true
+    state_display: |-
+      [[[
+        let data = states['sensor.bb_sleep_raw']?.attributes?.results;
+        if (!data) return '0h 0m';
+        let today = new Date();
+        let total = 0;
+        for (let i=0; i<data.length; i++) {
+          let start = new Date(data[i].start);
+          let end = data[i].end ? new Date(data[i].end) : new Date();
+          let s_is_today = (start.getDate() === today.getDate() && start.getMonth() === today.getMonth());
+          let e_is_today = (end.getDate() === today.getDate() && end.getMonth() === today.getMonth());
+          if (s_is_today && e_is_today) {
+            total += (end - start) / 1000;
+          } else if (e_is_today && !s_is_today) {
+            let mid = new Date(end); mid.setHours(0,0,0,0);
+            total += (end - mid) / 1000;
+          } else if (s_is_today && !e_is_today) {
+            let eod = new Date(start); eod.setHours(23,59,59,999);
+            total += (eod - start) / 1000;
+          }
+        }
+        let h = Math.floor(total / 3600);
+        let m = Math.floor((total % 3600) / 60);
+        return h + 'h ' + m + 'm';
+      ]]]
+    styles:
+      card:
+        - border-radius: 16px
+        - padding: 16px 8px
+        - background: rgba(255,255,255,0.03)
+        - box-shadow: none
+      name:
+        - font-size: 12px
+        - opacity: 0.6
+        - margin-bottom: 4px
+      state:
+        - font-size: 20px
+        - font-weight: 600
+      icon:
+        - width: 24px
+        - color: "#65537F"
+        - margin-bottom: 8px
+  - type: custom:button-card
+    entity: sensor.nil_tomris_ozsoy_last_weight
+    name: Weight
+    icon: mdi:scale-bathroom
+    show_state: true
+    show_label: true
+    label: >-
+      [[[ let d = entity.attributes.date || entity.attributes.time ||
+      entity.last_changed; return d ? new Date(d).toLocaleDateString(undefined,
+      {month:'short', day:'numeric'}) : ''; ]]]
+    state_display: >-
+      [[[ return (entity.state && entity.state !== 'unavailable') ? entity.state
+      + ' kg' : '-'; ]]]
+    styles:
+      card:
+        - border-radius: 16px
+        - padding: 16px 8px
+        - background: rgba(255,255,255,0.03)
+        - box-shadow: none
+      name:
+        - font-size: 12px
+        - opacity: 0.6
+        - margin-bottom: 4px
+      label:
+        - font-size: 10px
+        - opacity: 0.5
+        - margin-top: 4px
+      state:
+        - font-size: 16px
+        - font-weight: 600
+      icon:
+        - width: 24px
+        - color: "#2E6D5D"
+        - margin-bottom: 8px
+  - type: custom:button-card
+    entity: sensor.nil_tomris_ozsoy_last_height
+    name: Height
+    icon: mdi:human-male-height
+    show_state: true
+    show_label: true
+    label: >-
+      [[[ let d = entity.attributes.date || entity.attributes.time ||
+      entity.last_changed; return d ? new Date(d).toLocaleDateString(undefined,
+      {month:'short', day:'numeric'}) : ''; ]]]
+    state_display: >-
+      [[[ return (entity.state && entity.state !== 'unavailable') ? entity.state
+      + ' cm' : '-'; ]]]
+    styles:
+      card:
+        - border-radius: 16px
+        - padding: 16px 8px
+        - background: rgba(255,255,255,0.03)
+        - box-shadow: none
+      name:
+        - font-size: 12px
+        - opacity: 0.6
+        - margin-bottom: 4px
+      label:
+        - font-size: 10px
+        - opacity: 0.5
+        - margin-top: 4px
+      state:
+        - font-size: 16px
+        - font-weight: 600
+      icon:
+        - width: 24px
+        - color: "#2E6D5D"
+        - margin-bottom: 8px
+  - type: custom:button-card
+    entity: sensor.nil_tomris_ozsoy_last_head_circumference
+    name: Head Circ
+    icon: mdi:tape-measure
+    show_state: true
+    show_label: true
+    label: >-
+      [[[ let d = entity.attributes.date || entity.attributes.time ||
+      entity.last_changed; return d ? new Date(d).toLocaleDateString(undefined,
+      {month:'short', day:'numeric'}) : ''; ]]]
+    state_display: >-
+      [[[ return (entity.state && entity.state !== 'unavailable') ? entity.state
+      + ' cm' : '-'; ]]]
+    styles:
+      card:
+        - border-radius: 16px
+        - padding: 16px 8px
+        - background: rgba(255,255,255,0.03)
+        - box-shadow: none
+      name:
+        - font-size: 12px
+        - opacity: 0.6
+        - margin-bottom: 4px
+      label:
+        - font-size: 10px
+        - opacity: 0.5
+        - margin-top: 4px
+      state:
+        - font-size: 16px
+        - font-weight: 600
+      icon:
+        - width: 24px
+        - color: "#A77B85"
+        - margin-bottom: 8px
