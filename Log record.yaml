@@ -1,0 +1,645 @@
+type: vertical-stack
+cards:
+  - type: markdown
+    content: "**📝 Log Record**"
+    card_mod:
+      style: >-
+        ha-card { background: transparent !important; box-shadow: none
+        !important; border: none !important; padding: 16px 8px 4px 8px
+        !important; margin-bottom: 0px !important; opacity: 0.8; }
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        entity: input_select.bb_log_type
+        name: Feeding
+        icon: mdi:baby-bottle
+        show_state: false
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 14px 4px
+            - box-shadow: none
+            - background-color: >-
+                [[[ return entity.state === 'Feeding' ? '#6885B3' :
+                'rgba(255,255,255,0.06)'; ]]]
+            - opacity: "[[[ return entity.state === 'Feeding' ? '1' : '0.5'; ]]]"
+            - border: none
+          name:
+            - font-size: 12px
+            - font-weight: "600"
+            - margin-top: 6px
+          icon:
+            - width: 22px
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_log_type
+            option: Feeding
+      - type: custom:button-card
+        entity: input_select.bb_log_type
+        name: Sleep
+        icon: mdi:weather-night
+        show_state: false
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 14px 4px
+            - box-shadow: none
+            - background-color: >-
+                [[[ return entity.state === 'Sleep' ? '#5A7FA0' :
+                'rgba(255,255,255,0.06)'; ]]]
+            - opacity: "[[[ return entity.state === 'Sleep' ? '1' : '0.5'; ]]]"
+            - border: none
+          name:
+            - font-size: 12px
+            - font-weight: "600"
+            - margin-top: 6px
+          icon:
+            - width: 22px
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_log_type
+            option: Sleep
+      - type: custom:button-card
+        entity: input_select.bb_log_type
+        name: Tummy Time
+        icon: mdi:baby
+        show_state: false
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 14px 4px
+            - box-shadow: none
+            - background-color: >-
+                [[[ return entity.state === 'Tummy Time' ? '#6A9E7E' :
+                'rgba(255,255,255,0.06)'; ]]]
+            - opacity: "[[[ return entity.state === 'Tummy Time' ? '1' : '0.5'; ]]]"
+            - border: none
+          name:
+            - font-size: 12px
+            - font-weight: "600"
+            - margin-top: 6px
+          icon:
+            - width: 22px
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          data:
+            entity_id: input_select.bb_log_type
+            option: Tummy Time
+  - type: custom:button-card
+    name: Reset times to now
+    icon: mdi:clock-refresh-outline
+    show_state: false
+    styles:
+      card:
+        - border-radius: 12px
+        - height: 38px
+        - box-shadow: none
+        - background-color: rgba(255,255,255,0.06)
+        - border: none
+      name:
+        - font-size: 11px
+        - font-weight: "500"
+        - opacity: "0.7"
+        - margin-left: 6px
+      icon:
+        - width: 16px
+        - opacity: "0.7"
+    tap_action:
+      action: perform-action
+      perform_action: script.bb_reset_log_times
+  - type: vertical-stack
+    cards:
+      - type: custom:button-card
+        entity: input_datetime.bb_log_start
+        name: START
+        show_state: false
+        show_label: true
+        show_icon: false
+        label: >-
+          [[[ let
+          s=states['input_datetime.bb_log_start']?.state;if(!s||s==='unknown')return
+          '--:--';let p=s.split(' '),dp=p[0].split('-');let
+          months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let
+          time=(p[1]||'').substring(0,5);let mon=months[parseInt(dp[1])-1];let
+          day=parseInt(dp[2]);return '<span
+          style="font-size:22px;font-weight:700;letter-spacing:1px">'+time+'</span><br><span
+          style="font-size:11px;opacity:0.45;font-weight:400">'+mon+'
+          '+day+'</span>'; ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 14px 8px 10px 8px
+            - box-shadow: none
+            - background-color: rgba(255,255,255,0.07)
+            - border: none
+          name:
+            - font-size: 11px
+            - opacity: "0.55"
+            - font-weight: "500"
+            - margin-bottom: 2px
+          label:
+            - font-size: 14px
+            - margin-top: 2px
+            - line-height: "1.4"
+        tap_action:
+          action: more-info
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            name: −1h
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 15px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_start
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_start']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(-60));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: −5m
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 13px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_start
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_start']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(-5));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: −1m
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 13px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_start
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_start']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(-1));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: +1m
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 13px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_start
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_start']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(1));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: +5m
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 13px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_start
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_start']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(5));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: +1h
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 15px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_start
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_start']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(60));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+  - type: vertical-stack
+    cards:
+      - type: custom:button-card
+        entity: input_datetime.bb_log_end
+        name: END
+        show_state: false
+        show_label: true
+        show_icon: false
+        label: >-
+          [[[ let
+          s=states['input_datetime.bb_log_end']?.state;if(!s||s==='unknown')return
+          '--:--';let p=s.split(' '),dp=p[0].split('-');let
+          months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let
+          time=(p[1]||'').substring(0,5);let mon=months[parseInt(dp[1])-1];let
+          day=parseInt(dp[2]);return '<span
+          style="font-size:22px;font-weight:700;letter-spacing:1px">'+time+'</span><br><span
+          style="font-size:11px;opacity:0.45;font-weight:400">'+mon+'
+          '+day+'</span>'; ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 14px 8px 10px 8px
+            - box-shadow: none
+            - background-color: rgba(255,255,255,0.07)
+            - border: none
+          name:
+            - font-size: 11px
+            - opacity: "0.55"
+            - font-weight: "500"
+            - margin-bottom: 2px
+          label:
+            - font-size: 14px
+            - margin-top: 2px
+            - line-height: "1.4"
+        tap_action:
+          action: more-info
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            name: −1h
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 15px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_end
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_end']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(-60));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: −5m
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 13px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_end
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_end']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(-5));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: −1m
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 13px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_end
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_end']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(-1));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: +1m
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 13px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_end
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_end']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(1));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: +5m
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 13px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_end
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_end']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(5));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+          - type: custom:button-card
+            name: +1h
+            show_icon: false
+            styles:
+              card:
+                - border-radius: 12px
+                - height: 42px
+                - box-shadow: none
+                - background-color: rgba(104,133,179,0.25)
+                - border: none
+              name:
+                - font-size: 15px
+                - font-weight: "700"
+                - color: "#FFFFFF"
+            tap_action:
+              action: call-service
+              service: input_datetime.set_datetime
+              service_data:
+                entity_id: input_datetime.bb_log_end
+                datetime: >-
+                  [[[ let
+                  s=states['input_datetime.bb_log_end']?.state;if(!s||s==='unknown')return
+                  '2026-01-01 00:00:00';let p=s.split('
+                  '),dp=p[0].split('-'),tp=p[1].split(':');let dt=new
+                  Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0);dt.setMinutes(dt.getMinutes()+(60));let
+                  pad=n=>String(n).padStart(2,'0');return
+                  dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'
+                  '+pad(dt.getHours())+':'+pad(dt.getMinutes())+':00'; ]]]
+  - type: conditional
+    conditions:
+      - entity: input_select.bb_log_type
+        state: Feeding
+    card:
+      type: horizontal-stack
+      cards:
+        - type: custom:button-card
+          entity: input_select.bb_log_method
+          name: Left
+          show_icon: false
+          show_state: false
+          styles:
+            card:
+              - border-radius: 14px
+              - height: 40px
+              - box-shadow: none
+              - background-color: >-
+                  [[[ return entity.state === 'left breast' ? '#8B7AB3' :
+                  'rgba(255,255,255,0.06)'; ]]]
+              - opacity: "[[[ return entity.state === 'left breast' ? '1' : '0.5'; ]]]"
+              - border: none
+            name:
+              - font-size: 11px
+              - font-weight: "600"
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bb_log_method
+              option: left breast
+        - type: custom:button-card
+          entity: input_select.bb_log_method
+          name: Both
+          show_icon: false
+          show_state: false
+          styles:
+            card:
+              - border-radius: 14px
+              - height: 40px
+              - box-shadow: none
+              - background-color: >-
+                  [[[ return entity.state === 'both breasts' ? '#6885B3' :
+                  'rgba(255,255,255,0.06)'; ]]]
+              - opacity: "[[[ return entity.state === 'both breasts' ? '1' : '0.5'; ]]]"
+              - border: none
+            name:
+              - font-size: 11px
+              - font-weight: "600"
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bb_log_method
+              option: both breasts
+        - type: custom:button-card
+          entity: input_select.bb_log_method
+          name: Right
+          show_icon: false
+          show_state: false
+          styles:
+            card:
+              - border-radius: 14px
+              - height: 40px
+              - box-shadow: none
+              - background-color: >-
+                  [[[ return entity.state === 'right breast' ? '#B37A7A' :
+                  'rgba(255,255,255,0.06)'; ]]]
+              - opacity: "[[[ return entity.state === 'right breast' ? '1' : '0.5'; ]]]"
+              - border: none
+            name:
+              - font-size: 11px
+              - font-weight: "600"
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bb_log_method
+              option: right breast
+  - type: custom:button-card
+    entity: input_text.bb_log_status
+    show_icon: false
+    show_name: false
+    show_state: true
+    styles:
+      card:
+        - border-radius: 12px
+        - height: 36px
+        - box-shadow: none
+        - background-color: rgba(255,255,255,0.04)
+        - border: none
+      state:
+        - font-size: 12px
+        - opacity: "0.75"
+        - font-weight: "500"
+    tap_action:
+      action: none
+  - type: custom:button-card
+    name: Save to BabyBuddy
+    icon: mdi:content-save-check
+    show_state: false
+    styles:
+      card:
+        - border-radius: 16px
+        - padding: 14px 8px
+        - box-shadow: none
+        - background-color: "#6885B3"
+        - border: none
+      name:
+        - font-size: 14px
+        - font-weight: "700"
+        - margin-top: 6px
+        - color: "#FFFFFF"
+      icon:
+        - width: 22px
+        - color: "#FFFFFF"
+    tap_action:
+      action: perform-action
+      perform_action: script.bb_save_log
